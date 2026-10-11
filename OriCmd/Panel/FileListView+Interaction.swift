@@ -79,6 +79,8 @@ extension FileListView: NSDraggingSource {
         beginDraggingSession(with: draggingItems, event: event, source: self)
     }
 
+    /// Without .generic within OriCmd: with it macOS shows no "+" for a copy until a
+    /// modifier key is pressed.
     func draggingSession(_ session: NSDraggingSession,
                          sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
         context == .withinApplication ? [.copy, .move] : [.copy, .move, .generic, .link]
@@ -148,9 +150,15 @@ extension FileListView {
     }
 
     /// Copy by default, as in Total Commander; ⌘ (which limits the source mask
-    /// to moving) moves.
+    /// to moving) moves. Files dragged from a panel move with ⌥ or ⌘: macOS limits
+    /// the mask to copying or to nothing then, but takes a move from the destination.
+    /// Not other programs' files with ⌥: one may allow only copying them (Music its
+    /// library), which ⌥ hides.
     private func dropOperation(_ sender: NSDraggingInfo) -> NSDragOperation {
         let mask = sender.draggingSourceOperationMask
+        if sender.draggingSource is FileListView, !NSEvent.modifierFlags.isDisjoint(with: [.option, .command]) {
+            return .move
+        }
         if mask.contains(.copy) { return .copy }
         if mask.contains(.move) || mask.contains(.generic) { return .move }
         return []

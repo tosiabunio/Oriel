@@ -211,7 +211,7 @@ and the dependencies. Commit revisions are not displayed.
 
 Imported upstream versions and commits are recorded separately in release notes.
 The latest imported upstream checkpoint is
-[OriCmd 0.13.3b, commit a7cda51](https://github.com/mmag/OriCmd/commit/a7cda51).
+[OriCmd 0.13.4b, commit 7fbc363](https://github.com/mmag/OriCmd/commit/7fbc363).
 Upstream imports preserve this fork's release numbering.
 
 ## Keys
@@ -565,8 +565,9 @@ show in Finder, clipboard, rename, delete, pack, Get Info (the Finder's window),
 and as in the Finder, Share (AirDrop, Mail, Messages…), the Finder's tags (its
 colors under the names it gives them, so tags set here are the Finder's own) and
 Services, Quick Actions among them. Files can be dragged between the panels,
-from Finder and to Finder; copying by default, moving with `⌘`. Dropping onto a
-folder row puts the files into it.
+from Finder and to Finder; copying by default, moving with `⌘`, or with `⌥`
+between the panels (the cursor loses its "+"; from Finder `⌥` copies, as there).
+Dropping onto a folder row puts the files into it.
 
 The right button can mark files instead (Settings → Panels → Mouse): a click
 marks or unmarks a file, a drag over files makes them all as the first one
