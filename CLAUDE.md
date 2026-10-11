@@ -1335,3 +1335,12 @@ as the latest imported upstream checkpoint. The drag change has no automated che
   (the sheet had not appeared yet; passed alone) and the two Bonjour checks (`dns-sd`
   cannot register inside Claude Code's sandbox; passed with it off). The five UX
   suites and 11 accessibility checks passed.
+- Installed as fork build 57 (`2bd1c15`) and pushed (`main` = `local-build` =
+  `2bd1c15`, with `upstream-0.13.4b`), then, at the user's request,
+  `scripts/release.sh 2026.10.15` (release commit `b6a4497`, internal build 31):
+  https://github.com/tosiabunio/Oriel/releases/tag/v2026.10.15 has
+  `Oriel-2026.10.15.dmg` (8,930,370 bytes, SHA-256 `599a937e…9adfea`), verified with
+  `build/verify-driver` for `tosiabunio/Oriel` and `io.github.tosiabunio.oriel`, size,
+  checksum, codesign, universal app and helper; it is the latest release. Reinstalled
+  as fork build 58, "2026.10.15 (58)". The notes present the drag change; upstream
+  base 0.13.4b (`7fbc363`).
