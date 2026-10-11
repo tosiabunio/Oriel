@@ -307,7 +307,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 30;
+				CURRENT_PROJECT_VERSION = 31;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/OriCmd-Info.plist";
@@ -319,7 +319,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 2026.10.14;
+				MARKETING_VERSION = 2026.10.15;
 				ORICMD_FORK = tosiabunio;
 				ORICMD_FORK_BUILD = "";
 				ORICMD_FORK_COMMIT = "";
@@ -341,7 +341,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 30;
+				CURRENT_PROJECT_VERSION = 31;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/OriCmd-Info.plist";
@@ -353,7 +353,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 2026.10.14;
+				MARKETING_VERSION = 2026.10.15;
 				ORICMD_FORK = tosiabunio;
 				ORICMD_FORK_BUILD = "";
 				ORICMD_FORK_COMMIT = "";
@@ -372,11 +372,11 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 30;
+				CURRENT_PROJECT_VERSION = 31;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/Highlighter-Info.plist";
-				MARKETING_VERSION = 2026.10.14;
+				MARKETING_VERSION = 2026.10.15;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.tosiabunio.oriel.Highlighter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -392,11 +392,11 @@
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 30;
+				CURRENT_PROJECT_VERSION = 31;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/Highlighter-Info.plist";
-				MARKETING_VERSION = 2026.10.14;
+				MARKETING_VERSION = 2026.10.15;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.tosiabunio.oriel.Highlighter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
