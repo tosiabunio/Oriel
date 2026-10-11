@@ -220,7 +220,8 @@ scripts/test/regress.sh                   # main file operations, checked on dis
   `git fetch origin`, list `git log <last imported>..origin/main`, and if there is
   nothing new, say so and change nothing. Otherwise merge `origin/main` on a new
   `upstream-<version>` branch from `main` in a short worktree path (the path bar
-  check fails in long ones), keep the fork's version and the higher internal build
+  check fails in long ones: since phase 9 `build/up134` was already too long, so
+  keep the whole path within 40 characters, e.g. `build/u4`), keep the fork's version and the higher internal build
   number, update the README's "latest imported upstream checkpoint" line, run the
   full tests, fast-forward `main` and `local-build`, install, and push to the fork
   once the user agrees (pushing still needs asking). Where an
@@ -228,8 +229,8 @@ scripts/test/regress.sh                   # main file operations, checked on dis
   the bottom bar, dialogs restyled here), keep the fork's behavior and port the
   upstream fix into it rather than dropping either; ask only when the two cannot
   both be kept.
-- Last upstream check: 2026-10-07. `origin/main` was still `a7cda51` (0.13.3b,
-  2026-10-05), already merged; nothing to import.
+- Last upstream check: 2026-10-11. `origin/main` was `7fbc363` (0.13.4b,
+  2026-10-08), merged on 2026-10-11 (see "Upstream 0.13.4b integrated" below).
 
 ## Work in progress
 
@@ -1314,3 +1315,23 @@ The user asked to install, push and release 2026.10.14 once the tests passed.
   checksum, codesign, universal app and helper; it is the latest release. Reinstalled
   as fork build 56, "2026.10.14 (56)". The notes present phase 11; upstream base still
   0.13.3b.
+
+## Upstream 0.13.4b integrated on 2026-10-11
+
+Branch `upstream-0.13.4b` (worktree `build/u4`; first `build/up134`, moved because
+its path hid the root crumb) merges upstream through `origin/main` at `7fbc363`:
+dragging between the panels moves with ⌥ as well as ⌘ (`dropOperation` returns
+`.move` for a `FileListView` source with either key; other apps' files keep ⌥ as
+copying), ⌘ no longer leaves a drop between the panels with nothing to do, and the
+"+" of a copy shows from the start (no `.generic` in the in-app source mask). Merge
+`09d17c2` keeps the fork's project file (version 2026.10.14, internal build 30, the
+Oriel bundle IDs; upstream only bumped to 0.13.4b/18), keeps `README.ru.md` deleted,
+adds the ⌥ sentence to the fork's README Mouse section and names 0.13.4b/`7fbc363`
+as the latest imported upstream checkpoint. The drag change has no automated check
+(synthetic drags with modifiers are not in the test harness).
+- Validation: Debug build, 13 core tests, localization, 383 of 387 regression checks
+  on the full run, the other four passed when rerun: "/ in the path bar goes to the
+  root" (path length, passed from `build/u4`), "Combine: a damaged piece is said so"
+  (the sheet had not appeared yet; passed alone) and the two Bonjour checks (`dns-sd`
+  cannot register inside Claude Code's sandbox; passed with it off). The five UX
+  suites and 11 accessibility checks passed.
