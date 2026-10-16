@@ -191,10 +191,11 @@ enum Prompt {
         return line
     }
 
-    static func info(_ title: String, message: String, in window: NSWindow?) {
+    static func info(_ title: String, message: String, icon: NSImage? = nil, in window: NSWindow?) {
         let alert = NSAlert()
         alert.messageText = title
         alert.informativeText = message
+        if let icon { alert.icon = icon }
         if let window {
             alert.beginSheetModal(for: window)
         } else {

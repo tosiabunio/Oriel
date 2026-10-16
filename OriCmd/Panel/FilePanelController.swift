@@ -471,7 +471,8 @@ final class FilePanelController: NSViewController {
                 delegate?.filePanelDidChangeDirectory(self)
             } catch {
                 if !(error is CancellationError) {
-                    Prompt.error(String(localized: "Cannot read \u{201C}\(path)\u{201D}"), error, in: view.window)
+                    presentUnreadableFolder((path as NSString).lastPathComponent,
+                                            icon: NSWorkspace.shared.icon(for: .folder), because: error)
                 }
             }
         }
@@ -1205,7 +1206,22 @@ final class FilePanelController: NSViewController {
     }
 
     private func present(_ error: Error, reading directory: URL) {
-        Prompt.error(String(localized: "Cannot read folder \u{201C}\(directory.path)\u{201D}"), error, in: view.window)
+        let exists = FileManager.default.fileExists(atPath: directory.path)
+        presentUnreadableFolder(FileManager.default.displayName(atPath: directory.path),
+                                icon: exists ? FileIcons.icon(for: [directory]) : NSWorkspace.shared.icon(for: .folder),
+                                because: error)
+    }
+
+    /// "The folder “x” can’t be opened." with its icon, as the Finder says it, and why:
+    /// in plain words when permission is missing or the folder is gone.
+    private func presentUnreadableFolder(_ name: String, icon: NSImage, because error: Error) {
+        let reason = switch (error as? POSIXError)?.code {
+        case .EACCES?, .EPERM?: String(localized: "You don’t have permission to see its contents.")
+        case .ENOENT?: String(localized: "The folder no longer exists.")
+        default: error.localizedDescription
+        }
+        Prompt.info(String(localized: "The folder \u{201C}\(name)\u{201D} can’t be opened."), message: reason, icon: icon,
+                    in: view.window)
     }
 }
 

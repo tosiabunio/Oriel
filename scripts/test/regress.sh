@@ -934,6 +934,11 @@ run dateback "alt+d wait text:ated escape enter wait ctrl+f5 wait ctrl+f5 wait h
 check "Ctrl+F5 again puts the oldest first" "panels dateback | grep -q '^left\\*: .*/dated | cursor: old.txt |'"
 run dateclick "alt+d wait text:ated escape enter wait headerclick:date home down"
 check "a click on the Date title also starts with the newest" "panels dateclick | grep -q '^left\\*: .*/dated | cursor: new.txt |'"
+# A folder that cannot be read is named, with its icon and why, as the Finder says it.
+mkdir -p $L/locked && chmod 000 $L/locked
+run denied "alt+l wait text:ocked escape enter wait wait"
+chmod 755 $L/locked
+check "a folder without permission: “can’t be opened” by its name, and why" "grep -qx 'The folder “locked” can’t be opened.' build/shots/reg-denied-sheet.txt && grep -qx 'You don’t have permission to see its contents.' build/shots/reg-denied-sheet.txt"
 # The sidebar (the modern look): devices, the usual folders and the hotlist; a place
 # opens in the active panel, whose place stays highlighted; ⌃⌘S hides it, and
 # Total Commander's look has none.

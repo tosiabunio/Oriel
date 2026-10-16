@@ -1531,16 +1531,6 @@
         }
       }
     },
-    "Cannot read folder “%@”": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Не удаётся прочитать каталог «%@»"
-          }
-        }
-      }
-    },
     "Cannot read the clipboard.": {
       "localizations": {
         "ru": {
@@ -8321,6 +8311,26 @@
         }
       }
     },
+    "The folder no longer exists.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Папка больше не существует."
+          }
+        }
+      }
+    },
+    "The folder “%@” can’t be opened.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удаётся открыть папку «%@»."
+          }
+        }
+      }
+    },
     "The other archives (%lld) are intact.": {
       "localizations": {
         "ru": {
@@ -9127,6 +9137,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Запись"
+          }
+        }
+      }
+    },
+    "You don’t have permission to see its contents.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "У вас нет прав на просмотр её содержимого."
           }
         }
       }
