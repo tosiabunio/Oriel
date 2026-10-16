@@ -1213,12 +1213,15 @@ final class FilePanelController: NSViewController {
     }
 
     /// "The folder “x” can’t be opened." with its icon, as the Finder says it, and why:
-    /// in plain words when permission is missing or the folder is gone.
+    /// in plain words when permission is missing (a server says "Permission denied") or
+    /// the folder is gone.
     private func presentUnreadableFolder(_ name: String, icon: NSImage, because error: Error) {
+        let noPermission = String(localized: "You don’t have permission to see its contents.")
         let reason = switch (error as? POSIXError)?.code {
-        case .EACCES?, .EPERM?: String(localized: "You don’t have permission to see its contents.")
+        case .EACCES?, .EPERM?: noPermission
         case .ENOENT?: String(localized: "The folder no longer exists.")
-        default: error.localizedDescription
+        default: error is RemoteError && error.localizedDescription.contains("Permission denied")
+            ? noPermission : error.localizedDescription
         }
         Prompt.info(String(localized: "The folder \u{201C}\(name)\u{201D} can’t be opened."), message: reason, icon: icon,
                     in: view.window)

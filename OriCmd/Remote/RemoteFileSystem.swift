@@ -256,14 +256,19 @@ nonisolated final class LineBuffer: Sendable {
 nonisolated enum LongListing {
     private static let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
-    static func items(from text: String, baseURL: URL) -> [FileItem] {
-        text.split(whereSeparator: \.isNewline).compactMap { item(from: String($0), baseURL: baseURL) }
+    /// The entries of a listing; `prefix` is left out of the start of each name (as
+    /// "./" when a listing names the folder it lists).
+    static func items(from text: String, baseURL: URL, strippingPrefix prefix: String = "") -> [FileItem] {
+        text.split(whereSeparator: \.isNewline).compactMap { item(from: String($0), baseURL: baseURL, strippingPrefix: prefix) }
     }
 
-    static func item(from line: String, baseURL: URL) -> FileItem? {
+    static func item(from line: String, baseURL: URL, strippingPrefix prefix: String = "") -> FileItem? {
         let pattern = /^([-dlcbps])([-rwxsStT]{9})\S*\s+\S+\s+\S+\s+\S+\s+(\d+)\s+([A-Z][a-z]{2})\s+(\d{1,2})\s+(\d{1,2}:\d{2}|\d{4})\s(.+)$/
         guard let match = line.wholeMatch(of: pattern) else { return nil }
         var name = String(match.7)
+        if !prefix.isEmpty, name.hasPrefix(prefix) {
+            name.removeFirst(prefix.count)
+        }
         let type = match.1
         if type == "l", let arrow = name.range(of: " -> ") {
             name = String(name[..<arrow.lowerBound])

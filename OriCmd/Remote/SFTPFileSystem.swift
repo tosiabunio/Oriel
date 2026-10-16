@@ -215,22 +215,28 @@ nonisolated final class SFTPFileSystem: RemoteFileSystem {
         return components.url ?? URL(string: "sftp://\(host)")!
     }
 
+    /// The command that lists the folder `cd` went to. sftp ignores whether a bare `ls`
+    /// could read the folder (batch mode goes on, its status stays 0, and a folder it
+    /// may not read lists as empty); named, the folder makes it fail. Names then start
+    /// with "./".
+    private static let listCommand = "ls -lan ."
+
     func list(_ path: String) async throws -> [FileItem] {
         let folder = try Self.quoted(path)
-        let text = try await sftp(["cd \(folder)", "ls -lan"])
+        let text = try await sftp(["cd \(folder)", Self.listCommand])
         let lines = text.split(whereSeparator: \.isNewline).filter { !$0.hasPrefix("sftp>") }.joined(separator: "\n")
-        return LongListing.items(from: lines, baseURL: baseURL.appending(path: path))
+        return LongListing.items(from: lines, baseURL: baseURL.appending(path: path), strippingPrefix: "./")
     }
 
     /// Lists several folders in one session: one listing per path, in order.
     private func list(_ paths: [String]) async throws -> [[FileItem]] {
         let folders = try paths.map(Self.quoted)
-        let text = try await sftp(folders.flatMap { ["cd \($0)", "ls -lan"] })
+        let text = try await sftp(folders.flatMap { ["cd \($0)", Self.listCommand] })
         var chunks: [[Substring]] = []
         var collecting = false
         for line in text.split(whereSeparator: \.isNewline) {
             if line.hasPrefix("sftp>") {
-                collecting = line.hasSuffix("ls -lan")
+                collecting = line.hasSuffix(Self.listCommand)
                 if collecting { chunks.append([]) }
             } else if collecting {
                 chunks[chunks.count - 1].append(line)
@@ -238,7 +244,7 @@ nonisolated final class SFTPFileSystem: RemoteFileSystem {
         }
         guard chunks.count == paths.count else { throw RemoteError(String(localized: "Unexpected server listing")) }
         return zip(paths, chunks).map { path, lines in
-            LongListing.items(from: lines.joined(separator: "\n"), baseURL: baseURL.appending(path: path))
+            LongListing.items(from: lines.joined(separator: "\n"), baseURL: baseURL.appending(path: path), strippingPrefix: "./")
         }
     }
 
