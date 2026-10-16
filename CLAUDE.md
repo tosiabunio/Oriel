@@ -1365,3 +1365,53 @@ title all go through `sort(by:)`. README key table says "date (newest first)".
   `build/verify-driver` for `tosiabunio/Oriel` and `io.github.tosiabunio.oriel`, size,
   checksum, codesign, universal app and helper; it is the latest release. Reinstalled
   as fork build 60, "2026.10.16 (60)". Upstream base still 0.13.4b (`7fbc363`).
+
+## Visual refresh phase 12 and the SFTP listing fix on 2026-10-16
+
+A fifth survey (scratchpad `survey12.sh`: the terminal, menus, Reduce Transparency,
+empty, unreadable, loading and connecting panels; light and dark, Monaco 15) found the
+terminal and folder errors dated; menus, Reduce Transparency and the empty folder need
+nothing. Branch `modern-terminal` (worktree `build/p12`): `71e99e6` (terminal),
+`da70507` (folder errors), `2571330` (plan, README). Branch `sftp-unreadable`
+(worktree `build/su`, from `modern-terminal`): `41a308c`, `cae1c77` (SFTP), `5892c0a`,
+`dad32ad` (plan). The user asked to build 1–4, include the SFTP fix, and install, push
+and release 2026.10.17 once the tests passed.
+- `Panel/TerminalPalette.swift`: 16 ANSI colors from the system's red, green, yellow,
+  blue, purple and cyan resolved under `.aqua`/`.darkAqua` (the accessibility
+  appearances resolve the same, so they cannot give darker variants); light panel:
+  hues blended 35% to black, bright = the system's; dark: the system's, bright blended
+  30% to white. `isDark` = luminance of `Theme.panelBackground` (custom colors count).
+- `TerminalPane`: `font` = panel font if `isFixedPitch`, else monospaced system;
+  `applyLook()` (from attach and `FilePanelController.settingsDidChange`): Modern
+  insets top 4, leading `contentInset + 3` (= the list's icons), bottom 4; Classic 0/2/2;
+  `installColors(palette)`; `draw` fills `bounds ∩ dirtyRect` (macOS 14 views do not
+  clip, and filling `dirtyRect` painted over the list). `ShellTerminalView.fitScroller()`:
+  SwiftTerm forces a legacy `NSScroller` (a subview); it takes
+  `NSScroller.preferredScrollerStyle` and, as overlay, hides unless scrolled back
+  (`canScroll && scrollPosition < 1`), from both `scrolled` overrides (the
+  `Terminal`/yDisp one for output, the `TerminalView`/position one for the user) and
+  `bufferActivated`; the pane observes `preferredScrollerStyleDidChangeNotification`.
+- Folder errors: `presentUnreadableFolder` — "The folder “x” can’t be opened." with
+  `FileIcons.icon(for:)` (macOS badges an unreadable folder) via `Prompt.info(icon:)`;
+  EACCES/EPERM or a `RemoteError` with "Permission denied" → "You don’t have permission
+  to see its contents.", ENOENT → "The folder no longer exists.". The old key "Cannot
+  read folder “%@”" was removed from the catalog.
+- SFTP: `sftp -b` ignores the result of a bare `ls` after `cd`, so an unreadable server
+  folder listed as empty and downloads silently skipped such folders. Listings now run
+  `ls -lan "<folder>"` (quoted: `*?[` stay literal; fails with "Permission denied");
+  names come as `<folder>/name`, stripped by `LongListing.items(…strippingPrefix:)`
+  with the folder plus one "/" (`/` for root). `ls -lan .` after `cd` also fails but
+  says "Can't ls: …/. not found".
+- Test harness: `<snapshot>-terminallook.txt` (font, inset, background, ANSI blue,
+  scroller); `run.sh` passes `APP_ARGS` to the app (e.g. `-AppleShowScrollBars
+  WhenScrolling`: the argument domain only). Checks: denied, termlight, termdark,
+  termclassic, termoverlay, termoverback, termlegacy, sftpdenied, sftpdlocked.
+- Validation: full suite on `build/su` 398 of 399 (the one failure, sftpdenied, was
+  fixed by `cae1c77`), then the server section 44 of 44 and sftpdlocked on the final
+  build; 13 core tests, localization. "/ in the path bar goes to the root" failed
+  from `build/p12` (41 characters) and passed from `build/su` (40). The download case
+  was compared: the old build copied `deep/deeper` empty without a word, the new one
+  says "Download failed … Permission denied".
+- A test that `chmod 000`s a folder must restore it before `mkdata.sh`; a copied 000
+  folder in `right` needs `chmod -R u+rwx`.
+- `main` = `local-build` = `dad32ad` + this entry; installed as fork build 61.
