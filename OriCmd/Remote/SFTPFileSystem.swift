@@ -215,28 +215,32 @@ nonisolated final class SFTPFileSystem: RemoteFileSystem {
         return components.url ?? URL(string: "sftp://\(host)")!
     }
 
-    /// The command that lists the folder `cd` went to. sftp ignores whether a bare `ls`
-    /// could read the folder (batch mode goes on, its status stays 0, and a folder it
-    /// may not read lists as empty); named, the folder makes it fail. Names then start
-    /// with "./".
-    private static let listCommand = "ls -lan ."
+    /// Followed by the quoted folder, the command that lists it. After `cd`, a bare `ls`
+    /// lists a folder sftp may not read as empty and batch mode goes on (sftp ignores how
+    /// that `ls` went); named, the folder makes `ls` fail ("Permission denied"). Quoted,
+    /// `*`, `?` and `[` in its name are plain characters.
+    private static let listCommand = "ls -lan "
+
+    /// What each name listed by `listCommand` starts with: the folder and one "/".
+    private static func listedPrefix(_ path: String) -> String {
+        path.hasSuffix("/") ? path : path + "/"
+    }
 
     func list(_ path: String) async throws -> [FileItem] {
-        let folder = try Self.quoted(path)
-        let text = try await sftp(["cd \(folder)", Self.listCommand])
+        let text = try await sftp([Self.listCommand + Self.quoted(path)])
         let lines = text.split(whereSeparator: \.isNewline).filter { !$0.hasPrefix("sftp>") }.joined(separator: "\n")
-        return LongListing.items(from: lines, baseURL: baseURL.appending(path: path), strippingPrefix: "./")
+        return LongListing.items(from: lines, baseURL: baseURL.appending(path: path),
+                                 strippingPrefix: Self.listedPrefix(path))
     }
 
     /// Lists several folders in one session: one listing per path, in order.
     private func list(_ paths: [String]) async throws -> [[FileItem]] {
-        let folders = try paths.map(Self.quoted)
-        let text = try await sftp(folders.flatMap { ["cd \($0)", Self.listCommand] })
+        let text = try await sftp(paths.map { try Self.listCommand + Self.quoted($0) })
         var chunks: [[Substring]] = []
         var collecting = false
         for line in text.split(whereSeparator: \.isNewline) {
             if line.hasPrefix("sftp>") {
-                collecting = line.hasSuffix(Self.listCommand)
+                collecting = line.hasPrefix("sftp> " + Self.listCommand)
                 if collecting { chunks.append([]) }
             } else if collecting {
                 chunks[chunks.count - 1].append(line)
@@ -244,7 +248,8 @@ nonisolated final class SFTPFileSystem: RemoteFileSystem {
         }
         guard chunks.count == paths.count else { throw RemoteError(String(localized: "Unexpected server listing")) }
         return zip(paths, chunks).map { path, lines in
-            LongListing.items(from: lines.joined(separator: "\n"), baseURL: baseURL.appending(path: path), strippingPrefix: "./")
+            LongListing.items(from: lines.joined(separator: "\n"), baseURL: baseURL.appending(path: path),
+                              strippingPrefix: Self.listedPrefix(path))
         }
     }
 

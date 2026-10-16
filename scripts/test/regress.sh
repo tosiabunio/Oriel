@@ -1623,6 +1623,12 @@ mkdir -p $L/locked && chmod 000 $L/locked
 run sftpdenied "$(connect sftp://oritest$PWD/$L) alt+l wait text:ocked escape enter wait wait"
 chmod 755 $L/locked
 check "SFTP: a folder that cannot be read says so, not an empty folder" "grep -qx 'The folder “locked” can’t be opened.' build/shots/reg-sftpdenied-sheet.txt && grep -qx 'You don’t have permission to see its contents.' build/shots/reg-sftpdenied-sheet.txt"
+# A download that meets a folder it cannot read stops and says so (it left the folder
+# out without a word).
+scripts/test/mkdata.sh; chmod 000 $L/beta/deep/deeper
+run sftpdlocked "$(connect sftp://oritest$PWD/$L) home down down enter wait wait down f5 wait enter wait wait wait wait"
+chmod 755 $L/beta/deep/deeper; chmod -R u+rwx $R
+check "SFTP: a download that meets a folder it cannot read says so" "grep -qx 'Download failed' build/shots/reg-sftpdlocked-sheet.txt && grep -q 'Permission denied' build/shots/reg-sftpdlocked-sheet.txt"
 
 # A cancelled server command left its pipe handlers behind: at the end of the pipe
 # they were called without end, two cores busy while nothing went on. The CPU time
