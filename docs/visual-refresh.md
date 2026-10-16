@@ -532,8 +532,9 @@ Finder's no-entry badge in the list.
 looks (the terminal has no Classic appearance of its own); the edge and margins only
 in the Modern look. Views do not clip their drawing to their bounds (macOS 14), so
 the pane fills only its bounds. The survey also found that a server folder that
-cannot be read opens as an empty folder: the listing's `ls` fails after `cd`
-succeeds, and the failure is not reported (a functional bug, not part of this phase).
+cannot be read opened as an empty folder: sftp ignores whether a bare `ls` after `cd`
+could read the folder. The listing now runs `ls -lan .`, which fails there, and the
+folder is reported like a local one (branch `sftp-unreadable`, in the same release).
 
 ## The Look setting
 
