@@ -926,6 +926,14 @@ run colreset "headerdrag:size:30 headerdoubleclick:size columns"
 check "a double click on the edge gives the column its width again" "[ \"\$(width colreset size)\" = \"\$(width lookmodern size)\" ]"
 run colsort "headerclick:name home down"
 check "a click on the Name title reverses the order" "panels colsort | grep -q '^left\\*: .* | cursor: many |'"
+# Sorting by date starts with the newest file, the same key again puts the oldest first.
+mkdir -p $L/dated; touch -t 202001010000 $L/dated/old.txt; touch -t 202501010000 $L/dated/mid.txt; touch -t 203001010000 $L/dated/new.txt
+run datesort "alt+d wait text:ated escape enter wait ctrl+f5 wait home down"
+check "Ctrl+F5 sorts by date with the newest first" "panels datesort | grep -q '^left\\*: .*/dated | cursor: new.txt |'"
+run dateback "alt+d wait text:ated escape enter wait ctrl+f5 wait ctrl+f5 wait home down"
+check "Ctrl+F5 again puts the oldest first" "panels dateback | grep -q '^left\\*: .*/dated | cursor: old.txt |'"
+run dateclick "alt+d wait text:ated escape enter wait headerclick:date home down"
+check "a click on the Date title also starts with the newest" "panels dateclick | grep -q '^left\\*: .*/dated | cursor: new.txt |'"
 # The sidebar (the modern look): devices, the usual folders and the hotlist; a place
 # opens in the active panel, whose place stays highlighted; ⌃⌘S hides it, and
 # Total Commander's look has none.

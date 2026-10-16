@@ -1051,7 +1051,7 @@ final class FilePanelController: NSViewController {
         if sortOrder.column == column, !sortOrder.isUnsorted {
             sortOrder.ascending.toggle()
         } else {
-            sortOrder = SortOrder(column: column, ascending: true)
+            sortOrder = SortOrder(column: column, ascending: !column.startsDescending)
         }
     }
 

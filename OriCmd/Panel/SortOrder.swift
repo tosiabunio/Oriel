@@ -13,6 +13,9 @@ nonisolated enum SortColumn: String, CaseIterable, Sendable {
         }
     }
 
+    /// A new sort by it puts the newest items first, as the Finder's date columns do.
+    var startsDescending: Bool { self == .date || self == .created }
+
     static let extras: [SortColumn] = [.kind, .created, .dimensions, .duration, .tags, .comment]
     /// The columns after Name, in the order Full view shows them.
     static let optional: [SortColumn] = [.ext, .size, .date] + extras + [.attr]

@@ -270,7 +270,7 @@ layout `Ctrl+D`, `Ctrl+B`, `Ctrl+U` etc. work just like with the English one.
 | `⌘R` (`Ctrl+R`) | Reread the folder (changes are also picked up automatically) |
 | `⇧⌘.` | Show / hide hidden files |
 | Show → Ignore List… / Use the Ignore List | Entries the panels leave out — a name, a mask (`*.bak`) or a full path (`~/Library`) per line — while the list is used |
-| `Ctrl+F3` … `Ctrl+F6` (`⌃⌥⌘1` … `⌃⌥⌘4`) | Sort by name, extension, date, size; again — reverse order. Clicking a column header does the same |
+| `Ctrl+F3` … `Ctrl+F6` (`⌃⌥⌘1` … `⌃⌥⌘4`) | Sort by name, extension, date (newest first), size; again — reverse order. Clicking a column header does the same |
 | `Ctrl+F7` (`⌃⌥⌘5`) | Unsorted: the order the folder (or archive) has its entries in, folders first |
 
 `Ctrl+F1`…`Ctrl+F8`, `Ctrl+↑` and `Ctrl+←/→` are taken by macOS by default
