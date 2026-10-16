@@ -1414,4 +1414,12 @@ and release 2026.10.17 once the tests passed.
   says "Download failed … Permission denied".
 - A test that `chmod 000`s a folder must restore it before `mkdata.sh`; a copied 000
   folder in `right` needs `chmod -R u+rwx`.
-- `main` = `local-build` = `dad32ad` + this entry; installed as fork build 61.
+- Installed as fork build 61 and pushed (`main` = `local-build` = `2327090`, with
+  `modern-terminal` and `sftp-unreadable`), then `scripts/release.sh 2026.10.17`
+  (release commit `1e177a3`, internal build 33):
+  https://github.com/tosiabunio/Oriel/releases/tag/v2026.10.17 has
+  `Oriel-2026.10.17.dmg` (8,959,989 bytes, SHA-256 `faf18f27…eef125f`), verified with
+  `build/verify-driver` for `tosiabunio/Oriel` and `io.github.tosiabunio.oriel`, size,
+  checksum, codesign, universal app and helper; it is the latest release. Reinstalled
+  as fork build 62, "2026.10.17 (62)". The notes present phase 12 and the SFTP fix;
+  upstream base still 0.13.4b (`7fbc363`).
