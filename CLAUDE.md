@@ -1344,3 +1344,18 @@ as the latest imported upstream checkpoint. The drag change has no automated che
   checksum, codesign, universal app and helper; it is the latest release. Reinstalled
   as fork build 58, "2026.10.15 (58)". The notes present the drag change; upstream
   base 0.13.4b (`7fbc363`).
+
+## Date sorting starts with the newest on 2026-10-16
+
+The user asked that a new sort by date show the newest files first (it started with
+the oldest). Branch `date-newest` (worktree `build/dn`), commit `914e315`:
+`SortColumn.startsDescending` (`.date` and `.created`) and `FilePanelController.
+sort(by:)` starts such a column descending; the same key or title again reverses it
+as before. Ctrl+F5, `⌃⌥⌘3`, Show → Sort by Date and a click on the Date (or Created)
+title all go through `sort(by:)`. README key table says "date (newest first)".
+- Checks (after "a click on the Name title reverses the order"): datesort, dateback,
+  dateclick, on a `dated` folder of three files with `touch -t` times.
+- Validation: those three and the two existing sort checks, 13 core tests. The full
+  regression suite was not run (nothing else sorts by date).
+- `main` = `local-build` = this; installed as fork build 59 ("2026.10.15 (59)").
+  Not pushed.
