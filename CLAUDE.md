@@ -1345,7 +1345,7 @@ as the latest imported upstream checkpoint. The drag change has no automated che
   as fork build 58, "2026.10.15 (58)". The notes present the drag change; upstream
   base 0.13.4b (`7fbc363`).
 
-## Date sorting starts with the newest on 2026-10-16
+## Date sorting starts with the newest: release 2026.10.16
 
 The user asked that a new sort by date show the newest files first (it started with
 the oldest). Branch `date-newest` (worktree `build/dn`), commit `914e315`:
@@ -1357,5 +1357,11 @@ title all go through `sort(by:)`. README key table says "date (newest first)".
   dateclick, on a `dated` folder of three files with `touch -t` times.
 - Validation: those three and the two existing sort checks, 13 core tests. The full
   regression suite was not run (nothing else sorts by date).
-- `main` = `local-build` = this; installed as fork build 59 ("2026.10.15 (59)").
-  Not pushed.
+- Installed as fork build 59 and pushed (`main` = `local-build` = `7615f29`, with
+  `date-newest`), then, at the user's request, `scripts/release.sh 2026.10.16`
+  (release commit `3d88cf9`, internal build 32):
+  https://github.com/tosiabunio/Oriel/releases/tag/v2026.10.16 has
+  `Oriel-2026.10.16.dmg` (8,930,614 bytes, SHA-256 `e8521ab2…a5e40d`), verified with
+  `build/verify-driver` for `tosiabunio/Oriel` and `io.github.tosiabunio.oriel`, size,
+  checksum, codesign, universal app and helper; it is the latest release. Reinstalled
+  as fork build 60, "2026.10.16 (60)". Upstream base still 0.13.4b (`7fbc363`).
