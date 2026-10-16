@@ -10,7 +10,8 @@ deferred; phase 3 on branch `secondary-windows` (2026-10-07); the app icon on br
 rest of the tools, on branch `modern-tools` (2026-10-08); phase 9, the panel header's
 type, on branch `modern-header` (2026-10-09); phase 10, the bottom bar, on branch
 `modern-bottom` (2026-10-09); phase 11, the rows' icons, on branch `modern-rows`
-(2026-10-09).
+(2026-10-09); phase 12, the terminal and folder errors, on branch `modern-terminal`
+(2026-10-16).
 **Mockup:** [Today and proposed main window, interactive](https://claude.ai/artifact/CBd66sFhHtoyH7Bkzt2BeP)
 (light and dark).
 
@@ -489,6 +490,51 @@ icons are not.
 
 **As built (phase 11).** As planned; the Classic look keeps 16 pt icons.
 
+### Phase 12: the terminal and folder errors
+
+A fifth survey (2026-10-16) looked at what the earlier ones had not: the server
+terminal, the menus, Reduce Transparency, and a panel that is empty, cannot be read,
+is being read or waits for a server, in light and dark with Monaco 15. The menus need
+nothing (macOS 27 hides menu images unless an item asks to keep them, and the items
+that tell things apart already do), nor does Reduce Transparency (the app draws no
+glass of its own; its tints lie on opaque panels), nor the empty folder (the info
+line says "Empty folder"). The terminal and the folder errors were dated:
+
+1. **ANSI colors for the background.** SwiftTerm's palette is Terminal.app's Basic,
+   whose dark blue (folders in `ls -G`), red and magenta barely read on a dark
+   panel. The 16 colors are made of the system's red, green, yellow, blue, purple and
+   cyan: on a dark panel as they are, lightened for the bright set; on a light one
+   darkened (contrast about 3.5–8 on white), the system's own for the bright set. The
+   panel's background decides which, so custom panel colors count. Effort S.
+2. **The panel's font and edge.** The terminal used the system's monospaced font
+   whatever the panel's (Monaco beside SF Mono under one panel) and started 2 pt from
+   the edge, left of the list's icons. It takes the panel's font when its letters all
+   have one width, else the system's monospaced one at its size; in the Modern look
+   its text starts where the list's icons do, with 4 pt under the divider and above
+   the bottom, the margins in the panel's color. Effort S.
+3. **The scroller as the system shows scroll bars.** SwiftTerm always draws a legacy
+   scroller with its track. Where the system shows scroll bars only while scrolling,
+   it becomes an overlay knob shown while the terminal is scrolled back into its
+   output (Page Up, the wheel), hidden at the end of it. Effort S.
+4. **Folder errors as the Finder words them.** "Cannot read folder “/the/whole/path”"
+   over three lines and "The operation couldn’t be completed. Permission denied"
+   became "The folder “locked” can’t be opened." with the folder's icon (macOS adds
+   its no-entry badge) and "You don’t have permission to see its contents." (or
+   "The folder no longer exists."); other errors keep the system's text. A server
+   folder's error has the same title. Effort S.
+
+Left open: the panels' scroll bar track shows even when nothing scrolls where the
+system always shows scroll bars (hiding it would shift the columns by its width
+between short and long folders), and folders that cannot be opened could carry the
+Finder's no-entry badge in the list.
+
+**As built (phase 12).** As planned. The colors, font and scroller apply in both
+looks (the terminal has no Classic appearance of its own); the edge and margins only
+in the Modern look. Views do not clip their drawing to their bounds (macOS 14), so
+the pane fills only its bounds. The survey also found that a server folder that
+cannot be read opens as an empty folder: the listing's `ls` fails after `cd`
+succeeds, and the failure is not reported (a functional bug, not part of this phase).
+
 ## The Look setting
 
 The fork already has eight appearance switches: folder brackets, Mac-style tabs,
@@ -505,7 +551,8 @@ using the Modern look shows, on its own branch from `main`, behind the Look sett
 where it changes how the classic panels look. Phase 6 built what the phase 5
 survey left; phase 7 what a third survey found in the dialogs; phase 8 what a fourth
 found in the remaining tools; phase 9 the header's type, at the user's request;
-phase 10 the bottom bar's type and the modifier hints; phase 11 the rows' icons.
+phase 10 the bottom bar's type and the modifier hints; phase 11 the rows' icons;
+phase 12 the terminal and folder errors a fifth survey found.
 
 ## Sources
 

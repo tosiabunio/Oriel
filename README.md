@@ -57,7 +57,8 @@ keep working as always.
   ("Move 2 items to the Trash?", "Delete “notes.txt” immediately?") with the items'
   icon and names. Connect to Server keeps its recent servers in a rounded list, the
   Lister's table columns are as wide as their texts, and the key hints say New Folder
-  and Quit.
+  and Quit. A folder that cannot be opened is named with its icon, and the message
+  says why in plain words ("You don’t have permission to see its contents.").
 - **Tools that read at a glance:** Find Files lists its results with their icons,
   names and, in grey, their folders; the hex view greys the offsets and the dots that
   stand for bytes with no character; Compare outlines the chosen line, keeping its
@@ -535,7 +536,12 @@ copy or move from one to the other through this Mac (Total Commander's FXP).
 
 An SFTP panel is split in two: the files on top, the server's shell below, opened
 in the panel's folder over the same connection (nothing is asked again). Drag
-the line above the terminal to resize it.
+the line above the terminal to resize it. It uses the panel's font when its letters
+all have one width (Monaco, Menlo; otherwise the system's monospaced font) and the
+panel's colors, with ANSI colors made of the system's colors for a light or a dark
+panel; in the Modern look its text starts where the list's icons do. Where macOS
+shows scroll bars only while scrolling, its scroller shows only while you scroll
+back through its output.
 
 | Key | Action |
 |---|---|
