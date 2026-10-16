@@ -533,8 +533,10 @@ looks (the terminal has no Classic appearance of its own); the edge and margins 
 in the Modern look. Views do not clip their drawing to their bounds (macOS 14), so
 the pane fills only its bounds. The survey also found that a server folder that
 cannot be read opened as an empty folder: sftp ignores whether a bare `ls` after `cd`
-could read the folder. The listing now runs `ls -lan .`, which fails there, and the
-folder is reported like a local one (branch `sftp-unreadable`, in the same release).
+could read the folder, and a download left such a folder out without a word. The
+listing now names the folder (`ls -lan "<folder>"`), which fails there: the folder is
+reported like a local one and a download stops with the server's message (branch
+`sftp-unreadable`, in the same release).
 
 ## The Look setting
 
