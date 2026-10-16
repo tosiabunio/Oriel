@@ -28,8 +28,11 @@ final class TerminalPane: NSView {
         set { AppDefaults.store.set(Double(newValue), forKey: heightKey) }
     }
 
+    /// The panel's font when its letters all have one width (Monaco, Menlo), else the
+    /// system's monospaced font at its size.
     static var font: NSFont {
-        NSFont.monospacedSystemFont(ofSize: Theme.panelFont.pointSize, weight: .regular)
+        let panel = Theme.panelFont
+        return panel.isFixedPitch ? panel : NSFont.monospacedSystemFont(ofSize: panel.pointSize, weight: .regular)
     }
 
     /// The pane's height in the panel (set by the panel view).
@@ -44,6 +47,10 @@ final class TerminalPane: NSView {
     private let divider = TerminalDivider()
     /// The terminal shown: the active tab's.
     private(set) var terminal: ShellTerminalView?
+    /// The ANSI colors last installed in the terminal shown.
+    private var palette: [SwiftTerm.Color] = []
+    private var terminalTop: NSLayoutConstraint?
+    private var terminalLeading: NSLayoutConstraint?
     private var terminalBottom: NSLayoutConstraint?
     private var keptHeight: NSLayoutConstraint?
 
@@ -71,6 +78,8 @@ final class TerminalPane: NSView {
         divider.onDragEnd = { [weak self] in
             if let height = self?.heightConstraint?.constant { Self.preferredHeight = height }
         }
+        NotificationCenter.default.addObserver(self, selector: #selector(scrollerStyleDidChange),
+                                               name: NSScroller.preferredScrollerStyleDidChangeNotification, object: nil)
     }
 
     @available(*, unavailable)
@@ -116,15 +125,27 @@ final class TerminalPane: NSView {
         terminal.onReconnect = { [weak self] in self?.onReconnect?() }
         terminal.translatesAutoresizingMaskIntoConstraints = false
         addSubview(terminal)
-        NSLayoutConstraint.activate([
-            terminal.topAnchor.constraint(equalTo: divider.bottomAnchor),
-            terminal.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 2),
-            terminal.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -2),
-        ])
-        terminalBottom = terminal.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -2)
+        let top = terminal.topAnchor.constraint(equalTo: divider.bottomAnchor)
+        let leading = terminal.leadingAnchor.constraint(equalTo: leadingAnchor)
+        NSLayoutConstraint.activate([top, leading, terminal.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -2)])
+        terminalTop = top
+        terminalLeading = leading
+        terminalBottom = terminal.bottomAnchor.constraint(equalTo: bottomAnchor)
         keptHeight = terminal.heightAnchor.constraint(equalToConstant: 0)
+        applyLook()
         updateTerminalHeight()
+        terminal.fitScroller()
+    }
+
+    /// The room around the text (in the Modern look it starts where the list's icons
+    /// do, with a little space under the divider) and the colors.
+    func applyLook() {
+        let modern = Settings.isModern
+        terminalTop?.constant = modern ? 4 : 0
+        terminalLeading?.constant = modern ? Theme.contentInset + 3 : 2
+        terminalBottom?.constant = modern ? -4 : -2
         applyColors()
+        needsDisplay = true
     }
 
     /// Ends the session of `terminal` (the connection stays).
@@ -189,22 +210,57 @@ final class TerminalPane: NSView {
         heightConstraint.constant = min(max(heightConstraint.constant + delta, Self.minimumHeight), maximum)
     }
 
+    @objc private func scrollerStyleDidChange() {
+        terminal?.fitScroller()
+    }
+
     // MARK: - Colors
+
+    /// The margins around the terminal are the panel's. Views do not clip their drawing
+    /// to their bounds (macOS 14), and `dirtyRect` can reach past them.
+    override func draw(_ dirtyRect: NSRect) {
+        Theme.panelBackground.setFill()
+        bounds.intersection(dirtyRect).fill()
+    }
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
         applyColors()
     }
 
-    /// The panel's text colors, resolved for the current light or dark look.
+    /// The panel's text colors, resolved for the current light or dark look, and ANSI
+    /// colors that read on its background.
     private func applyColors() {
         guard let terminal else { return }
         effectiveAppearance.performAsCurrentDrawingAppearance {
             terminal.nativeForegroundColor = Theme.panelText
             terminal.nativeBackgroundColor = Theme.panelBackground
             terminal.caretColor = .controlAccentColor
+            palette = TerminalPalette.colors(onDark: TerminalPalette.isDark(Theme.panelBackground))
+            terminal.installColors(palette)
         }
     }
+
+    #if DEBUG
+    /// For tests: the font, where the text starts, the background's tone, the ANSI blue
+    /// installed and how the scroller shows.
+    var lookDescription: String? {
+        guard let terminal else { return nil }
+        var dark = false
+        effectiveAppearance.performAsCurrentDrawingAppearance { dark = TerminalPalette.isDark(Theme.panelBackground) }
+        let blue = palette.count == 16 ? "\(palette[4].red >> 8),\(palette[4].green >> 8),\(palette[4].blue >> 8)" : "none"
+        let scroller = terminal.subviews.lazy.compactMap { $0 as? NSScroller }.first.map {
+            "\($0.scrollerStyle == .overlay ? "overlay" : "legacy") \($0.isHidden ? "hidden" : "shown")"
+        } ?? "none"
+        return """
+            font: \(terminal.font.fontName) \(Int(terminal.font.pointSize))
+            inset: \(Int(terminal.frame.minX))
+            background: \(dark ? "dark" : "light")
+            blue: \(blue)
+            scroller: \(scroller)
+            """
+    }
+    #endif
 }
 
 extension TerminalPane: @preconcurrency LocalProcessTerminalViewDelegate {
@@ -314,6 +370,34 @@ final class ShellTerminalView: LocalProcessTerminalView {
         }
         keyDown(with: event)
         return true
+    }
+
+    /// SwiftTerm keeps a legacy scroller at all times. Where the system shows scroll bars
+    /// only while scrolling, it becomes an overlay knob, shown while the terminal is
+    /// scrolled back into its history.
+    func fitScroller() {
+        guard let scroller = subviews.lazy.compactMap({ $0 as? NSScroller }).first else { return }
+        let style = NSScroller.preferredScrollerStyle
+        let hidden = style == .overlay && !(canScroll && scrollPosition < 1)
+        if scroller.scrollerStyle != style { scroller.scrollerStyle = style }
+        if scroller.isHidden != hidden { scroller.isHidden = hidden }
+    }
+
+    /// Output moved the view.
+    override func scrolled(source terminal: Terminal, yDisp: Int) {
+        super.scrolled(source: terminal, yDisp: yDisp)
+        fitScroller()
+    }
+
+    /// The user scrolled (wheel, scroller, Page Up).
+    override func scrolled(source: TerminalView, position: Double) {
+        super.scrolled(source: source, position: position)
+        fitScroller()
+    }
+
+    override func bufferActivated(source: Terminal) {
+        super.bufferActivated(source: source)
+        fitScroller()
     }
 
     /// After the session ended the keys go nowhere; Return starts a new one.

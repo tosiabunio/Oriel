@@ -1698,6 +1698,28 @@ run termarchive "$(connect sftp://oritest$PWD/$L) wait drive:$PWD/$L wait wait a
 check "terminal: a server tab after an archive tab downloads with F5" "[ -f $R/readme.txt ]"
 run termiso "$(connect sftp://oritest$PWD/$L) wait ru+ctrl+§ text:touch space text:via-iso-key.txt enter wait wait"
 check "terminal: Ctrl+§ (ё on Russian – PC) works too" "[ -f $L/via-iso-key.txt ]"
+# How the terminal looks: the panel's font when its letters have one width, the text
+# where the list's icons start (Modern), ANSI colors chosen for the panel's background,
+# and its scroller as the system shows scroll bars (APP_ARGS: the argument domain only).
+tlook() { cat build/shots/reg-$1-terminallook.txt 2>/dev/null; }
+tgreen() { tlook $1 | sed -n 's/^blue: [0-9]*,\([0-9]*\),.*/\1/p'; }
+monaco() { defaults write ru.themmag.OriCmd.tests PanelFontName Monaco; defaults write ru.themmag.OriCmd.tests PanelFontSize -float 15; }
+monaco; defaults write ru.themmag.OriCmd.tests Appearance light
+run termlight "$(connect sftp://oritest$PWD/$L) wait ctrl+\` wait"
+check "terminal: the panel's monospaced font, its text where the list's icons start" "tlook termlight | grep -qx 'font: Monaco 15' && tlook termlight | grep -qx 'inset: 11'"
+check "terminal: darker ANSI colors on a light panel" "tlook termlight | grep -qx 'background: light' && [ \"\$(tgreen termlight)\" -lt 110 ]"
+monaco; defaults write ru.themmag.OriCmd.tests Appearance dark
+run termdark "$(connect sftp://oritest$PWD/$L) wait ctrl+\` wait"
+check "terminal: ANSI colors that read on a dark panel (no dark blue)" "tlook termdark | grep -qx 'background: dark' && [ \"\$(tgreen termdark)\" -gt 120 ]"
+defaults write ru.themmag.OriCmd.tests Look classic
+run termclassic "$(connect sftp://oritest$PWD/$L) wait ctrl+\` wait"
+check "terminal: Classic keeps its edge; a proportional panel font gives the system's monospaced one" "tlook termclassic | grep -qx 'inset: 2' && tlook termclassic | grep -q '^font: .*Mono'"
+APP_ARGS="-AppleShowScrollBars WhenScrolling" run termoverlay "$(connect sftp://oritest$PWD/$L) wait ctrl+\` text:seq space text:1 space text:200 enter wait wait"
+check "terminal: where scroll bars show while scrolling, its scroller hides at the end of the output" "tlook termoverlay | grep -qx 'scroller: overlay hidden'"
+APP_ARGS="-AppleShowScrollBars WhenScrolling" run termoverback "$(connect sftp://oritest$PWD/$L) wait ctrl+\` text:seq space text:1 space text:200 enter wait wait pageup wait"
+check "terminal: … and shows while scrolled back" "tlook termoverback | grep -qx 'scroller: overlay shown'"
+APP_ARGS="-AppleShowScrollBars Always" run termlegacy "$(connect sftp://oritest$PWD/$L) wait ctrl+\` wait"
+check "terminal: where scroll bars always show, so does its scroller" "tlook termlegacy | grep -qx 'scroller: legacy shown'"
 # A server tab dragged to the other panel takes its connection and its running
 # terminal along: the shell started before finishes its command, the panel shows the
 # server, and the terminal answers there (Return after it ends reconnects).

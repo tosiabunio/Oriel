@@ -22,7 +22,8 @@ import WebKit
 /// - `ORICMD_SNAPSHOT`: PNG path; the window (and an open sheet, as
 ///   `<name>-sheet.png`, other windows as `<name>-win1.png`…, each with the texts it
 ///   shows in a `.txt` beside it) is rendered there after the keys are played; a server
-///   terminal of the active panel as `<name>-terminal.png` and `.txt`.
+///   terminal of the active panel as `<name>-terminal.png` and `.txt`, and how it looks
+///   (font, inset, colors, scroller) as `<name>-terminallook.txt`.
 /// - `ORICMD_QUIT`: exit when done (even with a sheet open).
 /// - `ORICMD_DEMO`: README screenshots (`scripts/screenshots.sh`): only the startup
 ///   volume, windows pictured as the window server shows them, and (given the demo
@@ -781,6 +782,9 @@ enum DebugAutomation {
                         .write(toFile: snapshot.replacingOccurrences(of: ".png", with: "-terminal.txt"),
                                atomically: true, encoding: .utf8)
                     save(terminal, to: snapshot.replacingOccurrences(of: ".png", with: "-terminal.png"))
+                    try? main.activePanel.panelView.terminalPane.lookDescription?
+                        .write(toFile: snapshot.replacingOccurrences(of: ".png", with: "-terminallook.txt"),
+                               atomically: true, encoding: .utf8)
                 }
                 var sheet = window.attachedSheet
                 var suffix = "-sheet"

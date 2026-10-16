@@ -260,6 +260,7 @@ final class FilePanelController: NSViewController {
         for terminal in terminals where terminal.font != TerminalPane.font {
             terminal.font = TerminalPane.font
         }
+        panelView.terminalPane.applyLook()
         listView.settingsDidChange()
         refreshList(selecting: listView.currentItem?.name, fallback: listView.cursor)
         panelView.pathBar.needsDisplay = true

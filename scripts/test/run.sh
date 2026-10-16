@@ -25,12 +25,14 @@ rm -f "build/shots/$name.png" "build/shots/$name.txt" "build/shots/$name.complet
 # ORICMD_DDJVU: the ddjvu that draws DjVu pages (none unless given, whatever is installed).
 # ORICMD_UNAR_DIR: where lsar and unar are (for solid RAR 4; none unless given).
 # ORICMD_VETO: names copies cannot create, as a server's "veto files" (/.DS_Store/Thumbs.db/).
+# APP_ARGS: more arguments for the app, e.g. "-AppleShowScrollBars WhenScrolling" (system
+# settings in the app's argument domain only, never written anywhere).
 open -g -W -n --env ORICMD_LEFT=$PWD/build/testdata/left --env ORICMD_RIGHT=${RIGHT_PANEL:-$PWD/build/testdata/right} \
   --env ORICMD_SSH_CONFIG=$PWD/build/sshtest/ssh_config --env ORICMD_DDJVU=${ORICMD_DDJVU:-} \
   --env ORICMD_UNAR_DIR=${ORICMD_UNAR_DIR:-} --env ORICMD_VETO=${ORICMD_VETO:-} \
   --env "ORICMD_KEYS=$keys" --env ORICMD_SNAPSHOT=$PWD/build/shots/$name.png --env ORICMD_QUIT=1 \
   build/DerivedData/Build/Products/Debug/OriCmd.app --args -AppleLanguages "(${UI_LANGUAGE:-en})" \
-  -ApplePersistenceIgnoreState YES
+  -ApplePersistenceIgnoreState YES ${=APP_ARGS:-}
 [ -s "build/shots/$name.png" ] && [ -f "build/shots/$name.complete" ] || {
   print -u2 "Test $name did not finish and save its snapshot"
   exit 1
