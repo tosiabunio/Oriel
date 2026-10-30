@@ -1448,3 +1448,53 @@ runs (the cause is unknown; the probe on 2026-10-30 captured fine), so the plain
   is Polish).
 - Debug-only code and docs, so the app was not reinstalled (installed: build 62).
   Validation: all seven captures read, 13 core tests, localization.
+- Pushed at the user's request (all 9 CI runs passed). The finished worktrees under
+  `build/` were then removed (13, about 6 GB); `build/local-build` and
+  `build/review-updates` remain.
+
+## Visual refresh phase 13 on 2026-10-30: large fonts and narrow panels
+
+The user asked to continue the visual upgrades. A sixth survey (scratchpad
+`survey13.sh`: demo folders with a real zip, a `chmod 000` folder, a long and an empty
+folder; Monaco 15, dark and light, window server captures) found what does not follow
+a large font or a narrow panel. Branch `modern-fit` (worktree `build/vt`), `dd8ab16`;
+the user asked to install, push and release once the tests passed.
+- `ColumnLayout`: Ext = max(width("WWWW"), width("00000"), 44) (five letters in a
+  font of one width; SF unchanged); after Attr and the extras, Date and then Size are
+  dropped while Name < `preferredNameWidth` (140). The user's "no narrow-column date
+  fallback" stands: the date's form never changes, the column goes.
+- `FolderTabBar`: `tabWidths` (natural, or an equal share of the bar down to
+  extra + 3 × font size), `offset`, `tabArea` between 16 pt arrows when they overflow,
+  `revealSelected()` on titles, selection and resize, wheel and arrow clicks, both
+  looks; hit tests ignore the arrows. Test action `tabbar` → `<name>-tabbar.txt`
+  ("shown from to", "index from to", `*` for the selected tab).
+- Renaming in place: an unbezeled opaque field (`textBackgroundColor`, layer corner 4,
+  1.5 pt `controlAccentColor` border), line height + 4 centered on the row, 2 pt left
+  so its text stays where the name was. The bezeled field of macOS 26+ is see-through
+  whatever `backgroundColor` says.
+- `FileItem.isUnreadable` (`access(R_OK | X_OK)` at listing, local folders only);
+  `FileIcons.unreadableFolder` = `NSWorkspace.icon(forFile:)`, which has the
+  no-entry badge; rows (cached by path) and Thumbnails.
+- Command palette: labels in `NSTableCellView`s, centered. `PanelView.applyLook()`:
+  status line and quick search in `Theme.headerDetailFont` (Modern), the field
+  max(200, 16 × size) wide. `DriveBar`: `height`, `font`, `iconSize` follow the header
+  in Modern (radius 5). Sidebar `PlaceCell.layout()` shows the free space only when the
+  whole name fits beside it (a hidden label still constrains the name). About: credits
+  in the system font at their sizes and weights, window 560 pt (lines with addresses
+  stay whole). `PathBar.Place.preview` (`eye.fill`) for Quick View's header; Quick
+  View's text is Quick Look's and keeps its font.
+- The panels' scroll bar track appeared mid-survey: the app then saw legacy scrollers
+  (probably a mouse plugged in); `-AppleShowScrollBars WhenScrolling` removed it.
+  Check the scroller style before blaming a change for a track in captures.
+- Checks: coltree, colmono, tabsmany. Validation: 403 of 403 regression checks, the
+  five UX suites, 11 accessibility checks, 13 core tests, localization; README
+  screenshots regenerated (the sidebar now reads "Macintosh HD" without free space).
+- Installed as fork build 63 and pushed (`main` = `local-build` = `dd8ab16`, with
+  `modern-fit`; 9 CI runs passed), then `scripts/release.sh 2026.10.18` (release commit
+  `fb50cd8`, internal build 34): https://github.com/tosiabunio/Oriel/releases/tag/v2026.10.18
+  has `Oriel-2026.10.18.dmg` (8,972,435 bytes, SHA-256 `8b5c3278…97525c`), verified with
+  the verify driver rebuilt from the current `UpdateVerification.swift`
+  (`swiftc -parse-as-library -enable-bare-slash-regex`, now `build/vd/verify-driver`)
+  for `tosiabunio/Oriel` and `io.github.tosiabunio.oriel`, size, checksum, codesign,
+  universal app and helper; it is the latest release. Reinstalled as fork build 64,
+  "2026.10.18 (64)". The notes present phase 13; upstream base still 0.13.4b (`7fbc363`).
