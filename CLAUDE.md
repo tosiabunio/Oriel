@@ -1423,3 +1423,28 @@ and release 2026.10.17 once the tests passed.
   checksum, codesign, universal app and helper; it is the latest release. Reinstalled
   as fork build 62, "2026.10.17 (62)". The notes present phase 12 and the SFTP fix;
   upstream base still 0.13.4b (`7fbc363`).
+
+## README screenshots fixed on 2026-10-30
+
+The user found the README screenshots broken: the toolbar's icons were blank white
+pills in the dark shot and the sidebar was empty in both main window shots. The
+window server capture (`saveComposited`) had failed without a word in the phase 9/10
+runs (the cause is unknown; the probe on 2026-10-30 captured fine), so the plain
+`cacheDisplay` pictures were published. Branch `dark-screenshots` (worktree
+`build/ss`), `96ef489`; `main` = `local-build` = this, plus this entry, not pushed.
+- At the user's request every shot is dark; `THEME` is gone. `main-dark.png` was
+  removed (it would repeat `main.png`) and its gallery tile is now `thumbnails.png`
+  (Downloads in Thumbnails view).
+- A failed capture now removes the picture and writes "Window capture failed for …"
+  to stderr; `screenshots.sh` collects these in `build/shots/readme/capture.log`,
+  prints them and exits 1, as it does for a missing picture.
+- Sheets: a sheet captured with `desktopIndependentWindow` brings its whole window
+  (scaled into the sheet's size), so it is cut out of the display with
+  `SCContentFilter(display:including: [sheet])` and `sourceRect`; the dimmed window
+  still shows outside its rounded corners, so `clearingCorners` clips to the frame
+  view's `effectiveCornerRadii` (16 pt on macOS 27; behind `#if compiler(>=6.4)`).
+  `excludingWindows:` would show other apps and the wallpaper in the corners instead.
+- In demo runs `FinderTags.colorNames()` returns the English names (the Finder here
+  is Polish).
+- Debug-only code and docs, so the app was not reinstalled (installed: build 62).
+  Validation: all seven captures read, 13 core tests, localization.
