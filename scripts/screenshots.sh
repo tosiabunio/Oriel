@@ -1,7 +1,8 @@
 #!/bin/zsh
 # Regenerates the README screenshots in docs/screenshots/en: plays key scenarios
 # on demo folders (/tmp/OriCmd, removed afterwards) in English with British region
-# formats, in the light theme unless THEME says otherwise.
+# formats, in the dark theme. Windows are captured as the window server shows them;
+# a window that cannot be captured so is reported and the script fails.
 # Needs the Debug build (see scripts/test/README.md).
 setopt nullglob
 cd "$(dirname $0)/.."
@@ -10,7 +11,10 @@ P=$D/Projects/OriCmd
 OUT=docs/screenshots
 SHOTS=build/shots/readme
 APP=build/DerivedData/Build/Products/Debug/OriCmd.app/Contents/MacOS/OriCmd
+LOG=$SHOTS/capture.log
 mkdir -p $OUT $SHOTS
+: > $LOG
+FAILED=0
 scripts/mkdemo.sh $D >/dev/null
 
 # File colors by type, as in the examples of the File Colors window.
@@ -26,18 +30,19 @@ shot() {
   rm -f $SHOTS/$name*.png
   defaults delete ru.themmag.OriCmd.tests 2>/dev/null
   defaults write ru.themmag.OriCmd.tests FileColorRules -data $RULES
-  # Light unless THEME says otherwise, whatever the system appearance.
-  defaults write ru.themmag.OriCmd.tests Appearance ${THEME:-light}
+  # Dark, whatever the system appearance.
+  defaults write ru.themmag.OriCmd.tests Appearance dark
   # A hotlist of demo folders for the sidebar.
   defaults write ru.themmag.OriCmd.tests DirectoryHotlist -array "$P" "$D/Backup"
   env ORICMD_DEMO=$D ORICMD_LEFT=$left ORICMD_RIGHT=$right "ORICMD_KEYS=$keys" \
-    ORICMD_SNAPSHOT=$PWD/$SHOTS/$name.png ORICMD_QUIT=1 "$@" $APP -AppleLanguages "($UI)" -AppleLocale $LOCALE >/dev/null 2>&1
+    ORICMD_SNAPSHOT=$PWD/$SHOTS/$name.png ORICMD_QUIT=1 "$@" $APP -AppleLanguages "($UI)" -AppleLocale $LOCALE 2>&1 >/dev/null |
+    grep '^Window capture failed' >> $LOG
   defaults delete ru.themmag.OriCmd.tests 2>/dev/null
 }
 
 # publish <snapshot> <name> <width>
 publish() {
-  [ -f $SHOTS/$1 ] || { echo "missing $1"; return }
+  [ -f $SHOTS/$1 ] || { echo "missing $1"; FAILED=1; return }
   mkdir -p $OUT/$UI
   sips -Z $3 $SHOTS/$1 --out $OUT/$UI/$2 >/dev/null && echo "$OUT/$UI/$2"
 }
@@ -55,8 +60,7 @@ for UI in en; do
   shot sync $P $D/Backup/OriCmd "cmd:cm_SyncDirs wait click:$COMPARE wait wait wait"
   shot rename $D/Downloads $P "alt+i wait text:MG escape insert insert insert insert insert insert ctrl+m wait text:$MASK wait wait"
   shot settings $P $D/Downloads "cmd:showSettings wait wait" ORICMD_SETTINGS_TAB=3
-  THEME=dark shot main-dark $P $D/Downloads \
-    "alt+l wait text:ICENSE escape insert alt+p wait text:ackage escape insert alt+r wait text:EADME escape wait"
+  shot thumbs $D/Downloads $P "cmd:cm_SrcThumbs wait wait wait"
 
   publish main.png main.png 1600
   publish copy-sheet.png copy-dialog.png 1100
@@ -64,6 +68,8 @@ for UI in en; do
   publish sync-win1.png sync.png 1400
   publish rename-win1.png multi-rename.png 1400
   publish settings-win1.png settings.png 1000
-  publish main-dark.png main-dark.png 1400
+  publish thumbs.png thumbnails.png 1400
 done
 rm -rf $D
+[ -s $LOG ] && { cat $LOG; FAILED=1 }
+exit $FAILED

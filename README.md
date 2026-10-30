@@ -118,13 +118,13 @@ keep working as always.
 
 ## Screenshots
 
-The screenshots show this fork's interface with its default settings.
+The screenshots show this fork's interface with its default settings in the dark theme.
 
 | | |
 |---|---|
 | ![Copy dialog](docs/screenshots/en/copy-dialog.png)<br>Copy (`F5`): what is copied and from where, the target, a file type filter, overwrite modes | ![Settings](docs/screenshots/en/settings.png)<br>Settings with a panel preview |
 | ![Compare by content](docs/screenshots/en/compare.png)<br>Compare files by content | ![Multi-Rename Tool](docs/screenshots/en/multi-rename.png)<br>Multi-Rename Tool (`Ctrl+M`) |
-| ![Synchronize directories](docs/screenshots/en/sync.png)<br>Synchronize directories | ![Dark theme](docs/screenshots/en/main-dark.png)<br>Dark theme |
+| ![Synchronize directories](docs/screenshots/en/sync.png)<br>Synchronize directories | ![Thumbnails view](docs/screenshots/en/thumbnails.png)<br>Thumbnails (`Ctrl+Shift+F1`) |
 
 The screenshots are made by `scripts/screenshots.sh` on demo folders
 (in `docs/screenshots/en`).

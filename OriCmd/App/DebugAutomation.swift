@@ -26,8 +26,9 @@ import WebKit
 ///   (font, inset, colors, scroller) as `<name>-terminallook.txt`.
 /// - `ORICMD_QUIT`: exit when done (even with a sheet open).
 /// - `ORICMD_DEMO`: README screenshots (`scripts/screenshots.sh`): only the startup
-///   volume, windows pictured as the window server shows them, and (given the demo
-///   folder's path) the sidebar's home folder and Downloads there.
+///   volume, the tags' English names, windows and sheets pictured as the window server
+///   shows them, and (given the demo folder's path) the sidebar's home folder and
+///   Downloads there.
 enum DebugAutomation {
     /// Calls the accessibility APIs against live panel geometry and state.
     private static func checkAccessibility(of list: FileListView) -> String {
@@ -790,6 +791,9 @@ enum DebugAutomation {
                 var suffix = "-sheet"
                 while let current = sheet {
                     save(current, to: snapshot.replacingOccurrences(of: ".png", with: "\(suffix).png"))
+                    if environment["ORICMD_DEMO"] != nil {
+                        await saveComposited(current, to: snapshot.replacingOccurrences(of: ".png", with: "\(suffix).png"))
+                    }
                     saveTexts(of: current, to: snapshot.replacingOccurrences(of: ".png", with: "\(suffix).txt"),
                               buttons: true)
                     sheet = current.attachedSheet
@@ -1180,21 +1184,74 @@ enum DebugAutomation {
     }
 
     /// The window as the window server shows it, over the picture `save` made: a
-    /// view's own drawing paints the toolbar's glass as blank white. An app may
-    /// capture its own windows without the Screen Recording permission.
+    /// view's own drawing paints the toolbar's glass as blank white and leaves the
+    /// sidebar empty. An app may capture its own windows without the Screen Recording
+    /// permission. When the capture fails, the picture is removed and the reason
+    /// written to the standard error, so no README screenshot shows the blank glass.
     private static func saveComposited(_ window: NSWindow, to path: String) async {
-        guard #available(macOS 14.4, *),
-              let content = try? await SCShareableContent.currentProcess,
-              let shown = content.windows.first(where: { $0.windowID == CGWindowID(window.windowNumber) }) else { return }
-        let filter = SCContentFilter(desktopIndependentWindow: shown)
-        let configuration = SCStreamConfiguration()
-        configuration.width = Int(filter.contentRect.width * CGFloat(filter.pointPixelScale))
-        configuration.height = Int(filter.contentRect.height * CGFloat(filter.pointPixelScale))
-        configuration.ignoreShadowsSingleWindow = true
-        configuration.showsCursor = false
-        guard let image = try? await SCScreenshotManager.captureImage(contentFilter: filter,
-                                                                      configuration: configuration) else { return }
-        try? NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])?.write(to: URL(filePath: path))
+        do {
+            guard #available(macOS 14.4, *) else { throw CaptureError.unavailable }
+            let content = try await SCShareableContent.currentProcess
+            guard let listed = content.windows.first(where: { $0.windowID == CGWindowID(window.windowNumber) }) else {
+                throw CaptureError.windowNotShown
+            }
+            let filter: SCContentFilter
+            let configuration = SCStreamConfiguration()
+            if window.sheetParent != nil {
+                // A sheet captured as a window brings its whole window along, so it is
+                // cut out of the screen alone, its rounded corners left clear.
+                guard let screen = window.screen,
+                      let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID,
+                      let display = content.displays.first(where: { $0.displayID == number }) else {
+                    throw CaptureError.windowNotShown
+                }
+                filter = SCContentFilter(display: display, including: [listed])
+                configuration.sourceRect = CGRect(x: window.frame.minX - screen.frame.minX, y: screen.frame.maxY - window.frame.maxY,
+                                                  width: window.frame.width, height: window.frame.height)
+                configuration.width = Int(window.frame.width * screen.backingScaleFactor)
+                configuration.height = Int(window.frame.height * screen.backingScaleFactor)
+                configuration.backgroundColor = .clear
+                configuration.ignoreShadowsDisplay = true
+            } else {
+                filter = SCContentFilter(desktopIndependentWindow: listed)
+                configuration.width = Int(filter.contentRect.width * CGFloat(filter.pointPixelScale))
+                configuration.height = Int(filter.contentRect.height * CGFloat(filter.pointPixelScale))
+                configuration.ignoreShadowsSingleWindow = true
+            }
+            configuration.showsCursor = false
+            var image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: configuration)
+            if window.sheetParent != nil { image = clearingCorners(of: image, like: window) }
+            guard let png = NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:]) else {
+                throw CaptureError.unavailable
+            }
+            try png.write(to: URL(filePath: path))
+        } catch {
+            try? FileManager.default.removeItem(atPath: path)
+            FileHandle.standardError.write(Data("Window capture failed for \((path as NSString).lastPathComponent): \(error)\n".utf8))
+        }
+    }
+
+    /// The picture with what lies outside the window's rounded corners left clear: a
+    /// sheet cut out of the screen shows its dimmed window there.
+    private static func clearingCorners(of image: CGImage, like window: NSWindow) -> CGImage {
+        #if compiler(>=6.4)
+        if #available(macOS 27, *), let radius = window.contentView?.superview?.effectiveCornerRadii?.topLeft,
+           let space = image.colorSpace,
+           let context = CGContext(data: nil, width: image.width, height: image.height, bitsPerComponent: 8, bytesPerRow: 0,
+                                   space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) {
+            let bounds = CGRect(x: 0, y: 0, width: image.width, height: image.height)
+            let corner = radius * CGFloat(image.width) / window.frame.width
+            context.addPath(CGPath(roundedRect: bounds, cornerWidth: corner, cornerHeight: corner, transform: nil))
+            context.clip()
+            context.draw(image, in: bounds)
+            return context.makeImage() ?? image
+        }
+        #endif
+        return image
+    }
+
+    private enum CaptureError: Error {
+        case unavailable, windowNotShown
     }
 }
 

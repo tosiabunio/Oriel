@@ -41,6 +41,12 @@ enum FinderTags {
     /// The Finder's names of the colors: its favorite tags and the standard names, each
     /// tried on a scratch file to see which color it gets.
     static func colorNames() -> [Int: String] {
+        #if DEBUG
+        // README screenshots show the English names, whatever the Finder's language.
+        if ProcessInfo.processInfo.environment["ORICMD_DEMO"] != nil {
+            return [6: "Red", 7: "Orange", 5: "Yellow", 2: "Green", 4: "Blue", 3: "Purple", 1: "Gray"]
+        }
+        #endif
         let candidates = (UserDefaults(suiteName: "com.apple.finder")?.stringArray(forKey: "FavoriteTagNames") ?? [])
             + NSWorkspace.shared.fileLabels
         let scratch = FileManager.default.temporaryDirectory.appending(path: "OriCmd-tags-\(UUID().uuidString)")
