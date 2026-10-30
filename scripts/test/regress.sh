@@ -926,6 +926,17 @@ run colreset "headerdrag:size:30 headerdoubleclick:size columns"
 check "a double click on the edge gives the column its width again" "[ \"\$(width colreset size)\" = \"\$(width lookmodern size)\" ]"
 run colsort "headerclick:name home down"
 check "a click on the Name title reverses the order" "panels colsort | grep -q '^left\\*: .* | cursor: many |'"
+# A narrow panel (the separate tree beside it) leaves Name its room, Date giving way;
+# with Monaco, whose letters are all as wide as a digit, Ext holds five of them.
+run coltree "cmd:cm_ToggleSeparateTree1 wait columns"
+check "beside the separate tree the panel leaves Date out and Name its room" "! cols coltree | grep -q '^date ' && [ \"\$(width coltree name)\" -ge 140 ]"
+defaults write ru.themmag.OriCmd.tests PanelFontName Monaco; defaults write ru.themmag.OriCmd.tests PanelFontSize -float 15
+run colmono "columns"
+check "with Monaco 15 the Ext column holds five letters" "[ \"\$(width colmono ext)\" -ge 57 ]"
+# Tabs that do not fit scroll, the selected one always whole in view.
+tabshown() { awk 'NR == 1 { from = $2; to = $3 } NR == 2 { scrolled = $2 < from } / \*$/ { shown = $2 >= from && $3 <= to } END { exit !(scrolled && shown) }' build/shots/reg-$1-tabbar.txt 2>/dev/null; }
+run tabsmany "cmd+t wait cmd+t wait cmd+t wait cmd+t wait cmd+t wait cmd+t wait cmd+t wait cmd+t wait tabbar"
+check "with more tabs than fit, the first scroll away and the selected one shows whole" "tabshown tabsmany"
 # Sorting by date starts with the newest file, the same key again puts the oldest first.
 mkdir -p $L/dated; touch -t 202001010000 $L/dated/old.txt; touch -t 202501010000 $L/dated/mid.txt; touch -t 203001010000 $L/dated/new.txt
 run datesort "alt+d wait text:ated escape enter wait ctrl+f5 wait home down"

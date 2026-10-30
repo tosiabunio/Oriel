@@ -257,11 +257,13 @@ extension SidebarViewController: NSOutlineViewDataSource, NSOutlineViewDelegate 
     }
 }
 
-/// A place: icon, name and, for a volume, its free space at the end.
+/// A place: icon, name and, for a volume, its free space at the end when the whole
+/// name fits beside it.
 private final class PlaceCell: NSTableCellView {
     private let icon = NSImageView()
     private let title = NSTextField(labelWithString: "")
     private let detail = NSTextField(labelWithString: "")
+    private var freeSpace = ""
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -297,9 +299,20 @@ private final class PlaceCell: NSTableCellView {
     func show(_ node: SidebarViewController.Node) {
         icon.image = node.icon
         title.stringValue = node.title
-        detail.stringValue = node.detail
-        detail.isHidden = node.detail.isEmpty
+        freeSpace = node.detail
+        needsLayout = true
         setAccessibilityLabel(node.detail.isEmpty ? node.title : "\(node.title), \(node.detail)")
+    }
+
+    /// The name keeps its room: a narrow sidebar leaves the free space out instead of
+    /// shortening the name.
+    override func layout() {
+        let room = bounds.width - 28
+        let needed = title.intrinsicContentSize.width + 6
+            + (freeSpace as NSString).size(withAttributes: [.font: detail.font ?? .systemFont(ofSize: 11)]).width
+        let shown = needed <= room ? freeSpace : ""
+        if detail.stringValue != shown { detail.stringValue = shown }
+        super.layout()
     }
 }
 

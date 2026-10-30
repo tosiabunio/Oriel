@@ -10,7 +10,11 @@ final class DriveBar: NSView {
         let icon: NSImage
     }
 
-    static let height: CGFloat = 20
+    /// In the modern look the buttons follow the header's fonts, as the tabs do.
+    static var height: CGFloat { Settings.isModern ? max(20, Theme.lineHeight(font) + 8) : 20 }
+
+    private static var font: NSFont { Settings.isModern ? Theme.headerDetailFont : Theme.chromeFont }
+    private static var iconSize: CGFloat { Settings.isModern ? font.pointSize + 3 : 14 }
 
     var drives: [Drive] = [] {
         didSet {
@@ -67,11 +71,11 @@ final class DriveBar: NSView {
     }
 
     private var attributes: [NSAttributedString.Key: Any] {
-        [.font: Theme.chromeFont, .foregroundColor: Theme.chromeText]
+        [.font: Self.font, .foregroundColor: Theme.chromeText]
     }
 
     private var buttonWidths: [CGFloat] {
-        drives.map { min(($0.title as NSString).size(withAttributes: attributes).width + 28, 160) }
+        drives.map { min(($0.title as NSString).size(withAttributes: attributes).width + Self.iconSize + 14, 160) }
     }
 
     private var contentWidth: CGFloat {
@@ -144,7 +148,7 @@ final class DriveBar: NSView {
         Theme.chromeBackground.setFill()
         bounds.fill()
         let highlighted = highlightedIndex
-        let textHeight = ceil(Theme.chromeFont.ascender - Theme.chromeFont.descender)
+        let textHeight = Theme.lineHeight(Self.font)
         if overflows {
             for (rect, symbol, enabled) in [(leftArrow, "chevron.left", offset > 0),
                                             (rightArrow, "chevron.right", offset < maxOffset)] {
@@ -164,13 +168,16 @@ final class DriveBar: NSView {
         for (index, rect) in buttonRects().enumerated() where rect.intersects(dirtyRect) {
             if index == highlighted {
                 Theme.inactiveHeaderBackground.setFill()
-                NSBezierPath(roundedRect: rect, xRadius: 3, yRadius: 3).fill()
+                let radius: CGFloat = Settings.isModern ? 5 : 3
+                NSBezierPath(roundedRect: rect, xRadius: radius, yRadius: radius).fill()
             }
             let drive = drives[index]
-            drive.icon.draw(in: NSRect(x: rect.minX + 4, y: rect.midY - 7, width: 14, height: 14),
+            let iconSize = Self.iconSize
+            drive.icon.draw(in: NSRect(x: rect.minX + 4, y: rect.midY - iconSize / 2, width: iconSize, height: iconSize),
                             from: .zero, operation: .sourceOver, fraction: 1, respectFlipped: true, hints: nil)
             (drive.title as NSString).draw(
-                with: NSRect(x: rect.minX + 22, y: rect.midY - textHeight / 2, width: rect.width - 24, height: textHeight),
+                with: NSRect(x: rect.minX + iconSize + 8, y: rect.midY - textHeight / 2,
+                             width: rect.width - iconSize - 10, height: textHeight),
                 options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine], attributes: attributes
             )
         }

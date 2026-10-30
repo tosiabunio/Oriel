@@ -4,6 +4,8 @@ import AppKit
 /// button under the mouse, or flat TC-style ones (as chosen in Settings).
 /// Click selects a tab, double click or a click of the middle button (the mouse wheel)
 /// closes it; a tab dragged to another place of the bar, or to the other panel's, goes there.
+/// Tabs that do not fit become narrower, down to a minimum; past that the bar scrolls
+/// (wheel, trackpad or the arrows at the ends), always showing the selected tab.
 final class FolderTabBar: NSView, NSDraggingSource {
     /// A tab being dragged: its identifier (tabs are only dragged inside OriCmd).
     static let pasteboardType = NSPasteboard.PasteboardType("ru.themmag.OriCmd.tab")
@@ -15,7 +17,10 @@ final class FolderTabBar: NSView, NSDraggingSource {
     private static var font: NSFont { Settings.isModern ? Theme.headerDetailFont : Theme.chromeFont }
 
     var titles: [String] = [] {
-        didSet { needsDisplay = true }
+        didSet {
+            needsDisplay = true
+            revealSelected()
+        }
     }
 
     /// The tabs' icons, in the order of `titles` (Mac-style tabs only).
@@ -27,8 +32,17 @@ final class FolderTabBar: NSView, NSDraggingSource {
     var identifiers: [UUID] = []
 
     var selectedIndex = 0 {
-        didSet { needsDisplay = true }
+        didSet {
+            needsDisplay = true
+            revealSelected()
+        }
     }
+
+    /// How far the tabs are scrolled, when they do not fit.
+    private var offset: CGFloat = 0 {
+        didSet { if offset != oldValue { needsDisplay = true } }
+    }
+    private static let arrowWidth: CGFloat = 16
 
     var onSelect: ((Int) -> Void)?
     var onClose: ((Int) -> Void)?
@@ -83,15 +97,84 @@ final class FolderTabBar: NSView, NSDraggingSource {
     /// button on the other.
     private static var sideRoom: CGFloat { max(closeSize, iconSize) + 10 }
 
+    /// The room before the first tab and after the last.
+    private var margin: CGFloat { Settings.macStyleTabs ? 4 : 2 }
+
+    /// Each tab as wide as its title, or, when they do not all fit, as wide as an
+    /// equal share of the bar, but not narrower than room for a few letters.
+    private var tabWidths: [CGFloat] {
+        // An icon and a close button on either side of the title.
+        let extra: CGFloat = Settings.macStyleTabs ? 2 * Self.sideRoom : 20
+        let widths = titles.map { min(($0 as NSString).size(withAttributes: attributes).width + extra, Self.maximumTabWidth) }
+        let room = bounds.width - 2 * margin - CGFloat(max(widths.count - 1, 0))
+        guard !widths.isEmpty, widths.reduce(0, +) > room else { return widths }
+        let share = max(floor(room / CGFloat(widths.count)), extra + 3 * Self.font.pointSize)
+        return widths.map { min($0, share) }
+    }
+
+    private var contentWidth: CGFloat {
+        tabWidths.reduce(2 * margin) { $0 + $1 } + CGFloat(max(titles.count - 1, 0))
+    }
+
+    private var overflows: Bool { contentWidth > bounds.width }
+
+    /// Where the tabs show: between the arrows when they do not fit.
+    private var tabArea: NSRect {
+        overflows ? bounds.insetBy(dx: Self.arrowWidth, dy: 0) : bounds
+    }
+
+    private var maxOffset: CGFloat { max(contentWidth - tabArea.width, 0) }
+
+    private var leftArrow: NSRect { NSRect(x: 0, y: 0, width: Self.arrowWidth, height: bounds.height) }
+    private var rightArrow: NSRect {
+        NSRect(x: bounds.maxX - Self.arrowWidth, y: 0, width: Self.arrowWidth, height: bounds.height)
+    }
+
     private func tabRects() -> [NSRect] {
         let macStyle = Settings.macStyleTabs
-        // An icon and a close button on either side of the title.
-        let extra: CGFloat = macStyle ? 2 * Self.sideRoom : 20
-        var x: CGFloat = macStyle ? 4 : 2
-        return titles.map { title in
-            let width = min((title as NSString).size(withAttributes: attributes).width + extra, Self.maximumTabWidth)
+        var x = tabArea.minX + margin - offset
+        return tabWidths.map { width in
             defer { x += width + 1 }
             return NSRect(x: x, y: macStyle ? 3 : 2, width: width, height: bounds.height - (macStyle ? 3 : 2))
+        }
+    }
+
+    private func scroll(to value: CGFloat) {
+        offset = min(max(value, 0), maxOffset)
+    }
+
+    /// Scrolls so that the selected tab shows whole.
+    private func revealSelected() {
+        scroll(to: offset)
+        let rects = tabRects()
+        guard bounds.width > 0, rects.indices.contains(selectedIndex) else { return }
+        let rect = rects[selectedIndex], area = tabArea
+        if rect.minX < area.minX {
+            scroll(to: offset - (area.minX - rect.minX) - margin)
+        } else if rect.maxX > area.maxX {
+            scroll(to: offset + rect.maxX - area.maxX + margin)
+        }
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        revealSelected()
+    }
+
+    /// The arrows at the ends of a bar whose tabs do not fit, grey where it cannot
+    /// scroll further.
+    private func drawArrows() {
+        guard overflows else { return }
+        for (rect, symbol, enabled) in [(leftArrow, "chevron.left", offset > 0),
+                                        (rightArrow, "chevron.right", offset < maxOffset)] {
+            let color = enabled ? Theme.chromeText : Theme.chromeText.withAlphaComponent(0.3)
+            let configuration = NSImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
+                .applying(NSImage.SymbolConfiguration(paletteColors: [color]))
+            if let image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?
+                .withSymbolConfiguration(configuration) {
+                image.draw(in: NSRect(x: rect.midX - image.size.width / 2, y: rect.midY - image.size.height / 2,
+                                      width: image.size.width, height: image.size.height))
+            }
         }
     }
 
@@ -107,6 +190,9 @@ final class FolderTabBar: NSView, NSDraggingSource {
         }
         Theme.chromeBackground.setFill()
         bounds.fill()
+        drawArrows()
+        NSGraphicsContext.saveGraphicsState()
+        tabArea.clip()
         for (index, rect) in tabRects().enumerated() {
             let selected = index == selectedIndex
             (selected ? Theme.panelBackground : Theme.inactiveHeaderBackground).setFill()
@@ -124,6 +210,7 @@ final class FolderTabBar: NSView, NSDraggingSource {
                 options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine], attributes: attributes
             )
         }
+        NSGraphicsContext.restoreGraphicsState()
         Theme.separator.setFill()
         NSRect(x: 0, y: bounds.height - 1, width: bounds.width, height: 1).fill()
         if let dropIndex {
@@ -142,6 +229,10 @@ final class FolderTabBar: NSView, NSDraggingSource {
         let rects = tabRects()
         Theme.separator.setFill()
         NSRect(x: 0, y: bounds.height - 1, width: bounds.width, height: 1).fill()
+        drawArrows()
+        NSGraphicsContext.saveGraphicsState()
+        defer { NSGraphicsContext.restoreGraphicsState() }
+        tabArea.clip()
 
         for (index, rect) in rects.enumerated() {
             let selected = index == selectedIndex, hovered = index == hoveredIndex
@@ -244,13 +335,13 @@ final class FolderTabBar: NSView, NSDraggingSource {
     private func updateHover(at point: NSPoint) {
         guard Settings.macStyleTabs else { return }
         let rects = tabRects()
-        hoveredIndex = rects.firstIndex { $0.contains(point) }
+        hoveredIndex = tabArea.contains(point) ? rects.firstIndex { $0.contains(point) } : nil
         closeHovered = hoveredIndex.map { closeRect(in: rects[$0]).contains(point) } ?? false
     }
 
     /// The tab whose close button is at `point`.
     private func closeButtonIndex(at point: NSPoint) -> Int? {
-        guard Settings.macStyleTabs else { return nil }
+        guard Settings.macStyleTabs, tabArea.contains(point) else { return nil }
         return tabRects().firstIndex { closeRect(in: $0).contains(point) }
     }
 
@@ -268,6 +359,7 @@ final class FolderTabBar: NSView, NSDraggingSource {
     /// The tab under the event's location.
     private func tabIndex(at event: NSEvent) -> Int? {
         let point = convert(event.locationInWindow, from: nil)
+        guard tabArea.contains(point) else { return nil }
         return tabRects().firstIndex { $0.contains(point) }
     }
 
@@ -279,6 +371,13 @@ final class FolderTabBar: NSView, NSDraggingSource {
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
         pressed = nil
+        if overflows, leftArrow.contains(point) {
+            scroll(to: offset - tabArea.width * 0.7)
+            return
+        } else if overflows, rightArrow.contains(point) {
+            scroll(to: offset + tabArea.width * 0.7)
+            return
+        }
         if let index = closeButtonIndex(at: point) {
             hoveredIndex = nil
             onClose?(index)
@@ -312,6 +411,13 @@ final class FolderTabBar: NSView, NSDraggingSource {
 
     override func mouseUp(with event: NSEvent) {
         pressed = nil
+    }
+
+    override func scrollWheel(with event: NSEvent) {
+        guard overflows else { return super.scrollWheel(with: event) }
+        var delta = abs(event.scrollingDeltaX) > abs(event.scrollingDeltaY) ? event.scrollingDeltaX : event.scrollingDeltaY
+        if !event.hasPreciseScrollingDeltas { delta *= 12 }
+        scroll(to: offset - delta)
     }
 
     /// The middle button (the mouse wheel pressed) closes a tab; other extra buttons
@@ -374,6 +480,17 @@ final class FolderTabBar: NSView, NSDraggingSource {
     func drop(_ id: UUID, at index: Int) -> Bool {
         onDropTab?(id, index) ?? false
     }
+
+    #if DEBUG
+    /// Where the tabs show: "shown from to", then "index from to" for each tab, with a
+    /// * after the selected one (for the tests).
+    var layoutDescription: String {
+        let area = tabArea
+        return (["shown \(Int(area.minX)) \(Int(area.maxX))"] + tabRects().enumerated().map { index, rect in
+            "\(index) \(Int(rect.minX)) \(Int(rect.maxX))" + (index == selectedIndex ? " *" : "")
+        }).joined(separator: "\n")
+    }
+    #endif
 
     /// The middle of the tab at the index (for the tests).
     func center(ofTab index: Int) -> NSPoint? {

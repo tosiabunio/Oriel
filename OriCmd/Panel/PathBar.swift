@@ -34,6 +34,8 @@ final class PathBar: NSView {
     /// What the path is of: in the modern look a symbol before it says so.
     enum Place {
         case folder, archive, server, searchResults
+        /// Quick View's preview of a file.
+        case preview
 
         var symbolName: String {
             switch self {
@@ -41,6 +43,7 @@ final class PathBar: NSView {
             case .archive: "archivebox.fill"
             case .server: "server.rack"
             case .searchResults: "magnifyingglass"
+            case .preview: "eye.fill"
             }
         }
     }

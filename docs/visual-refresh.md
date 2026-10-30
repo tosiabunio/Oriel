@@ -11,7 +11,8 @@ rest of the tools, on branch `modern-tools` (2026-10-08); phase 9, the panel hea
 type, on branch `modern-header` (2026-10-09); phase 10, the bottom bar, on branch
 `modern-bottom` (2026-10-09); phase 11, the rows' icons, on branch `modern-rows`
 (2026-10-09); phase 12, the terminal and folder errors, on branch `modern-terminal`
-(2026-10-16).
+(2026-10-16); phase 13, large fonts and narrow panels, on branch `modern-fit`
+(2026-10-30).
 **Mockup:** [Today and proposed main window, interactive](https://claude.ai/artifact/CBd66sFhHtoyH7Bkzt2BeP)
 (light and dark).
 
@@ -538,6 +539,53 @@ listing now names the folder (`ls -lan "<folder>"`), which fails there: the fold
 reported like a local one and a download stops with the server's message (branch
 `sftp-unreadable`, in the same release).
 
+### Phase 13: large fonts and narrow panels
+
+A sixth survey (2026-10-30) looked at what the others had not, with Monaco 15 in
+light and dark: Brief and Thumbnails views, the separate tree, Quick View, horizontal
+panels, many tabs, an archive, a folder that cannot be opened, a long folder with
+scroll bars always shown, an empty folder, quick search and the quick filter,
+renaming in place, About, the command palette, Find Files, Operations and the drive
+buttons with the sidebar hidden. Horizontal panels, archives, the empty folder, Find
+Files and Operations need nothing. Most of what it found does not follow a larger
+list font or a narrower panel:
+
+1. **Columns in a narrow panel.** Beside the separate tree, Name shrank to three
+   letters while Ext, Size and Date kept their widths. After Attr and the optional
+   columns, Date and then Size now give way while Name would be narrower than
+   140 pt. Effort S.
+2. **Ext for fonts whose letters are all one width.** The column was measured on
+   "WWWW", four letters in Monaco ("swi…"). It is now at least five digits wide,
+   which changes nothing for the system font. Effort XS.
+3. **Many tabs.** Tabs kept their widths and ran off the bar's end, the selected one
+   (the newest) with them, with nothing to say so. They now share the bar equally,
+   down to room for a few letters; past that the bar scrolls as the drive buttons
+   do (wheel, trackpad, arrows at the ends), always showing the selected tab. Both
+   looks. Effort S.
+4. **Renaming in place.** On macOS 26 and later the bezeled field lets the row's own
+   text show through ("notes.txt txt"). The field is now opaque, unbezeled, outlined
+   in the accent color, its text where the row's name was. Both looks. Effort XS.
+5. **Unreadable folders in the list.** Listed folders that cannot be opened (`access`
+   at listing) get their own icon from the system, with the Finder's no-entry badge,
+   in the rows and in Thumbnails. Effort XS.
+6. **The command palette's rows.** The labels were stretched over the 25 pt rows,
+   their text at the top; they are now centered in cell views. Effort XS.
+7. **Quick search, the status line and the drive buttons** follow the header's
+   detail font in the Modern look (the field 16 letters wide), as the tabs do; the
+   drive buttons' icons and height grow with it. Effort XS.
+8. **The sidebar's devices.** The free space shortened the volume's name
+   ("Macintosh…"); it is now left out when the whole name does not fit beside it,
+   as the path bar's is (the header still shows it). Effort XS.
+9. **About.** The credits kept the Helvetica of their RTF; they are in the system
+   font now, their text unchanged, and the window 80 pt wider so the copyright lines
+   with their addresses stay whole. Effort XS.
+10. **Quick View's header** showed the folder symbol; it shows an eye, as the
+    toolbar's Quick View button. Quick View's text is Quick Look's own and keeps its
+    font. Effort XS.
+
+Left open: the scroll bar track where the system always shows scroll bars (see
+phase 12).
+
 ## The Look setting
 
 The fork already has eight appearance switches: folder brackets, Mac-style tabs,
@@ -555,7 +603,8 @@ where it changes how the classic panels look. Phase 6 built what the phase 5
 survey left; phase 7 what a third survey found in the dialogs; phase 8 what a fourth
 found in the remaining tools; phase 9 the header's type, at the user's request;
 phase 10 the bottom bar's type and the modifier hints; phase 11 the rows' icons;
-phase 12 the terminal and folder errors a fifth survey found.
+phase 12 the terminal and folder errors a fifth survey found; phase 13 what a sixth
+found with a large font and in narrow panels.
 
 ## Sources
 

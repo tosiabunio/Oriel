@@ -30,13 +30,13 @@ keep working as always.
   Composer) of two panes and a cursor that copies across, with the system's dark,
   clear and tinted versions; macOS 14 and 15 get flat images of it.
 - **Sidebar and one bottom bar:** in the Modern look a sidebar lists devices (with
-  free space), the usual folders, the directory hotlist and the Finder's color tags
+  free space where the whole name fits beside it), the usual folders, the directory hotlist and the Finder's color tags
   (a tag lists its files in the active panel; `⌃⌘S` or the toolbar button shows or
   hides the sidebar); the command line, the function keys as compact hints and
   Operations share one bar under the panels. Holding `⇧`, `⌥` or `⌃` the hints show
   what the function keys do with it (`⇧F5` Copy Here, `⌃F3` sort by name…). Operations also has a toolbar button
   whose badge counts what runs or waits (macOS 26), and the header shows a symbol
-  for the folder, archive, server or search results before the path.
+  for the folder, archive, server, search results or Quick View before the path.
 - **Tool windows as Mac windows:** the Lister (`F3`) is titled with the file's name
   (its folder and encoding below it, the file's icon draggable) and its keys are
   also a toolbar: previous and next file, text, hex or Quick Look (or the table,
@@ -67,9 +67,13 @@ keep working as always.
 - **Mac-style panels:** compact headers, folder icons and close buttons on tabs,
   key caps on function buttons, Finder-style sizes and status summaries, folder
   colors from Finder tags, and options for folder brackets and file extensions.
-  Column widths can be dragged in the header. In the Modern look the header is in
-  the system font whatever font the list uses, its sizes in proportion to the list's,
-  and the rows' icons grow with a larger list font.
+  Column widths can be dragged in the header. In the Modern look the header, the
+  drive buttons, quick search and the status line are in the system font whatever
+  font the list uses, their sizes in proportion to the list's, and the rows' icons
+  grow with a larger list font. Tabs that do not fit become narrower, then scroll
+  with the selected one in view; a narrow panel leaves out Date, then Size, before
+  it shortens names; a folder that cannot be opened shows the Finder's no-entry
+  badge; renaming in place edits in an opaque field outlined in the accent color.
 - **Drive information:** click the free-space or total-capacity readout to open
   Finder's information window for the panel's volume, in either header layout.
 - **Clear selection and filters:** checkmarks distinguish marked items from the
@@ -254,7 +258,7 @@ layout `Ctrl+D`, `Ctrl+B`, `Ctrl+U` etc. work just like with the English one.
 | `Alt+F7` (`⌘F`) | Find files by name, text, date, size and attributes, duplicates too (see [Find Files](#find-files-altf7)); "Feed to Panel" shows the results as a list in the panel, where all commands work on them, `[..]` returns to the search folder |
 | `Ctrl+F1` / `Ctrl+F2` (`⌘1` / `⌘2`) | Brief / Full view |
 | `Ctrl+Shift+F1` (`⌘4`) | Thumbnails (Quick Look previews) |
-| Right-click on the column headers | The columns of the set shown: Ext, Size, Date, Attr and the optional ones — kind, date created, picture dimensions, duration, Finder tags, Finder comment (sortable like the others). Attr is shown by default in the Classic look only |
+| Right-click on the column headers | The columns of the set shown: Ext, Size, Date, Attr and the optional ones — kind, date created, picture dimensions, duration, Finder tags, Finder comment (sortable like the others). Attr is shown by default in the Classic look only. A panel too narrow for them all leaves out Attr, the optional ones, Date and Size, in that order, so names stay readable |
 | Drag the edge between two column titles | Resizes a column (the edge after Name resizes the column right of it; Name takes the rest), for every panel; a double click on the edge gives the column its measured width again |
 | Show → Columns | Column sets: the Default columns or a set of your own for the panel; Column Sets… makes them, and a set can be used by itself in folders matching masks (`~/Pictures*;*/Photos`) |
 | Settings → Panels → File list | File extensions in Full view: in their own column, or after the name (the Ext title still sorts by extension; a long name is cut short before its extension) |
@@ -510,7 +514,8 @@ hidden in Settings). Right-click a drive button for the Finder's volume menu: op
 Info. When the buttons do not fit, they scroll (wheel, trackpad, arrows at the ends).
 
 In the Modern look the sidebar (Show → Show Sidebar, `⌃⌘S`, or the toolbar's
-sidebar button) takes their place: Devices with their free space, Favorites (home,
+sidebar button) takes their place: Devices with their free space (left out rather
+than shortening a name), Favorites (home,
 Desktop, Documents, Downloads, Applications) and the directory hotlist. A click
 opens the place in the active panel, whose place stays highlighted; right-click a
 place for the same menu as a drive button's. While the sidebar is shown the drive

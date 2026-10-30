@@ -42,6 +42,7 @@ final class PanelView: NSView {
     private var headerHeight: NSLayoutConstraint!
     private var driveBarHeight: NSLayoutConstraint!
     private var terminalHeight: NSLayoutConstraint!
+    private var quickSearchWidth: NSLayoutConstraint!
     /// The tab bar and the spinner go under the volume row, or the spinner into the
     /// path bar when the header is compact.
     private var classicConstraints: [NSLayoutConstraint] = []
@@ -110,6 +111,7 @@ final class PanelView: NSView {
         }
 
         headerHeight = headerView.heightAnchor.constraint(equalToConstant: headerView.intrinsicContentSize.height)
+        quickSearchWidth = quickSearchField.widthAnchor.constraint(equalToConstant: 200)
         tabBarHeight = tabBar.heightAnchor.constraint(equalToConstant: 0)
         driveBarHeight = driveBar.heightAnchor.constraint(equalToConstant: DriveBar.height)
         tabBar.isHidden = true
@@ -169,7 +171,7 @@ final class PanelView: NSView {
             terminalHeight,
 
             quickSearchField.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 2),
-            quickSearchField.widthAnchor.constraint(equalToConstant: 200),
+            quickSearchWidth,
             quickSearchField.centerYAnchor.constraint(equalTo: statusLabel.centerYAnchor),
         ])
         classicConstraints = [
@@ -208,9 +210,14 @@ final class PanelView: NSView {
         applyLook()
     }
 
-    /// The modern look draws the list without a frame and its column titles taller.
+    /// The modern look draws the list without a frame and its column titles taller,
+    /// and the status line and quick search in the header's detail font.
     private func applyLook() {
         scrollView.borderType = Settings.isModern ? .noBorder : .lineBorder
+        let font = Settings.isModern ? Theme.headerDetailFont : Theme.chromeFont
+        statusLabel.font = font
+        quickSearchField.font = font
+        quickSearchWidth.constant = Settings.isModern ? max(200, 16 * font.pointSize) : 200
         if !headerView.isHidden {
             headerHeight.constant = FileListHeaderView.height
         }

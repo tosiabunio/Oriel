@@ -120,7 +120,18 @@ final class CommandPaletteController: NSObject, NSTableViewDataSource, NSTableVi
         // The shortcuts quieter, at the end of the row, as menus show them.
         label.alignment = isKeys ? .right : .natural
         label.textColor = !isEnabled(command) ? .disabledControlTextColor : isKeys ? .secondaryLabelColor : .labelColor
-        return label
+        // In the middle of the row: a label alone is stretched over it and keeps its
+        // text at the top.
+        let cell = NSTableCellView()
+        cell.textField = label
+        label.translatesAutoresizingMaskIntoConstraints = false
+        cell.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.leadingAnchor.constraint(equalTo: cell.leadingAnchor, constant: 2),
+            label.trailingAnchor.constraint(equalTo: cell.trailingAnchor, constant: -2),
+            label.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
+        ])
+        return cell
     }
 
     /// The chosen row in the accent color while the search field keeps the focus,

@@ -2,10 +2,12 @@ import AppKit
 
 /// Horizontal geometry of the Full view columns: Name | Ext | Size | Date |
 /// optional metadata columns | Attr. Fixed columns keep their width (measured, or
-/// dragged in the header); Name takes the rest.
+/// dragged in the header); Name takes the rest, and in a narrow panel the other
+/// columns give way to it.
 struct ColumnLayout {
     static let minimumNameWidth: CGFloat = 60
-    /// Below this Name width, Attr and then optional columns are left out.
+    /// Below this Name width, Attr, optional columns, Date and Size are left out in
+    /// turn.
     static let preferredNameWidth: CGFloat = 140
     /// The narrowest a column can be dragged to.
     static let minimumColumnWidth: CGFloat = 24
@@ -49,7 +51,8 @@ struct ColumnLayout {
         let widths: [(SortColumn, CGFloat)] = columns.dropFirst().map { column in
             if let custom = customWidths[column] { return (column, custom) }
             return switch column {
-            case .ext: (column, max(width("WWWW"), 44))
+            // Four wide letters, or five where all letters are as wide as a digit.
+            case .ext: (column, max(width("WWWW"), width("00000"), 44))
             case .size: (column, width("999 999 999"))
             case .date, .created: (column, width(sampleDate))
             case .attr: (column, width("rwxrwxrwx"))
@@ -76,10 +79,13 @@ struct ColumnLayout {
     init(width: CGFloat, columns shown: [SortColumn], inset: CGFloat = 0) {
         let width = width - 2 * inset
         var fixedWidths = Self.fixedWidths(of: shown)
-        // Keep names readable: drop Attr first, then optional columns from the right.
+        // Keep names readable: drop Attr first, then optional columns from the right,
+        // then the date and the size.
         while width - fixedWidths.reduce(0, { $0 + $1.1 }) < Self.preferredNameWidth,
               let index = fixedWidths.firstIndex(where: { $0.0 == .attr })
-                ?? fixedWidths.lastIndex(where: { SortColumn.extras.contains($0.0) }) {
+                ?? fixedWidths.lastIndex(where: { SortColumn.extras.contains($0.0) })
+                ?? fixedWidths.firstIndex(where: { $0.0 == .date })
+                ?? fixedWidths.firstIndex(where: { $0.0 == .size }) {
             fixedWidths.remove(at: index)
         }
         let fixed = fixedWidths.reduce(0) { $0 + $1.1 }

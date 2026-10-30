@@ -15,6 +15,8 @@ nonisolated struct FileItem: Hashable, Sendable {
     let mode: mode_t
     /// The Finder's color of a folder, from its color tags (a label number, 0: none).
     var tagColor = 0
+    /// A local folder whose contents cannot be listed (drawn with the Finder's badge).
+    var isUnreadable = false
 
     /// The `[..]` entry that leads to the parent directory.
     static func parent(of directory: URL) -> FileItem {

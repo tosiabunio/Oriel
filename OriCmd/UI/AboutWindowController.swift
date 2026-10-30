@@ -5,7 +5,7 @@ final class AboutWindowController: NSWindowController {
     static let shared = AboutWindowController()
 
     private init() {
-        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 480, height: 600),
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 560, height: 600),
                               styleMask: [.titled, .closable, .fullSizeContentView], backing: .buffered, defer: true)
         let info = Bundle.main.infoDictionary ?? [:]
         let name = Bundle.main.appName
@@ -39,7 +39,7 @@ final class AboutWindowController: NSWindowController {
             label.isSelectable = true
         }
 
-        let text = NSTextView(frame: NSRect(x: 0, y: 0, width: 432, height: 260))
+        let text = NSTextView(frame: NSRect(x: 0, y: 0, width: 512, height: 260))
         text.isEditable = false
         text.isSelectable = true
         text.drawsBackground = false
@@ -47,7 +47,7 @@ final class AboutWindowController: NSWindowController {
         text.isHorizontallyResizable = false
         text.autoresizingMask = [.width]
         text.textContainer?.widthTracksTextView = true
-        text.textContainer?.containerSize = NSSize(width: 432, height: CGFloat.greatestFiniteMagnitude)
+        text.textContainer?.containerSize = NSSize(width: 512, height: CGFloat.greatestFiniteMagnitude)
         text.textContainerInset = NSSize(width: 8, height: 10)
         text.textContainer?.lineFragmentPadding = 0
         text.linkTextAttributes = [.foregroundColor: NSColor.linkColor, .underlineStyle: NSUnderlineStyle.single.rawValue]
@@ -104,9 +104,12 @@ final class AboutWindowController: NSWindowController {
            let notices = try? NSMutableAttributedString(url: url, options: [:], documentAttributes: nil) {
             let range = NSRange(location: 0, length: notices.length)
             notices.addAttribute(.foregroundColor, value: NSColor.labelColor, range: range)
+            // The system's font, as the rest of the window, at the notices' sizes and weights.
             notices.enumerateAttribute(.font, in: range) { value, range, _ in
                 if let font = value as? NSFont {
-                    notices.addAttribute(.font, value: font.withSize(font.pointSize + 2), range: range)
+                    let bold = font.fontDescriptor.symbolicTraits.contains(.bold)
+                    notices.addAttribute(.font, value: NSFont.systemFont(ofSize: font.pointSize + 2, weight: bold ? .bold : .regular),
+                                         range: range)
                 }
             }
             if let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) {

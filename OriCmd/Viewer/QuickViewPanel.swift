@@ -11,6 +11,7 @@ final class QuickViewPanel: NSView {
         super.init(frame: frameRect)
         titleBar.path = String(localized: "Quick View")
         titleBar.showsMask = false
+        titleBar.place = .preview
         var views: [NSView] = [titleBar]
         if let preview { views.append(preview) }
         for view in views {

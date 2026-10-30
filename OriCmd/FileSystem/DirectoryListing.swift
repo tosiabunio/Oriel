@@ -49,7 +49,8 @@ enum DirectoryListing {
             size: Int64(info.st_size),
             modified: modified,
             mode: info.st_mode,
-            tagColor: tagColor
+            tagColor: tagColor,
+            isUnreadable: isDirectory && !isPackage && access(path, R_OK | X_OK) != 0
         )
     }
 

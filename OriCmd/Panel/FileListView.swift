@@ -216,9 +216,22 @@ final class FileListView: NSView {
             frame.origin.x += Theme.rowIconSize + 4
             frame.size.width -= Theme.rowIconSize + 4
         }
+        // An opaque field with an accent outline, its text where the row's name was: a
+        // bezeled field lets the row's own name and extension show through.
+        let height = Theme.lineHeight(Theme.panelFont) + 4
+        frame = NSRect(x: frame.minX - 2, y: viewMode == .thumbnails ? frame.minY : row.midY - height / 2,
+                       width: frame.width + 2, height: viewMode == .thumbnails ? frame.height : height)
         let field = NSTextField(frame: frame)
         field.stringValue = item.name
         field.font = Theme.panelFont
+        field.isBezeled = false
+        field.isBordered = false
+        field.drawsBackground = true
+        field.backgroundColor = .textBackgroundColor
+        field.wantsLayer = true
+        field.layer?.cornerRadius = 4
+        field.layer?.borderWidth = 1.5
+        field.layer?.borderColor = NSColor.controlAccentColor.cgColor
         field.focusRingType = .none
         field.cell?.isScrollable = true
         field.cell?.wraps = false
@@ -630,6 +643,8 @@ final class FileListView: NSView {
         let image: NSImage
         if item.isParent, Settings.isModern {
             image = Self.parentThumbnail
+        } else if item.isFolder, item.isUnreadable {
+            image = FileIcons.unreadableFolder(item.url)
         } else if item.isParent || item.isFolder {
             image = item.isParent ? FileIcons.icon(for: item)
                 : FileIcons.folder(tagColor: item.tagColor, size: NSSize(width: size, height: size))

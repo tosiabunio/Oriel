@@ -6,6 +6,7 @@ enum FileIcons {
     private static let size = NSSize(width: 16, height: 16)
     private static var byExtension: [String: NSImage] = [:]
     private static var byPackagePath: [String: NSImage] = [:]
+    private static var unreadableFolders: [String: NSImage] = [:]
 
     private static let folder = sized(NSWorkspace.shared.icon(for: .folder))
     /// In the label color, so it shows in dark mode too.
@@ -14,6 +15,9 @@ enum FileIcons {
 
     static func icon(for item: FileItem) -> NSImage {
         if item.isParent { return parent }
+        if item.isFolder, item.isUnreadable {
+            return cached(&unreadableFolders, item.url.path) { unreadableFolder(item.url) }
+        }
         if item.isFolder { return item.tagColor == 0 ? folder : folder(tagColor: item.tagColor) }
         if item.isPackage {
             return cached(&byPackagePath, item.url.path) { NSWorkspace.shared.icon(forFile: item.url.path) }
@@ -31,6 +35,12 @@ enum FileIcons {
             return NSWorkspace.shared.icon(for: .folder)
         }
         return NSWorkspace.shared.icon(forFiles: urls.map(\.path)) ?? NSWorkspace.shared.icon(for: .data)
+    }
+
+    /// A folder that cannot be opened as the Finder shows it, with its no-entry badge:
+    /// its own icon, as the system makes it for that folder.
+    static func unreadableFolder(_ url: URL) -> NSImage {
+        NSWorkspace.shared.icon(forFile: url.path)
     }
 
     private static var tintedFolders: [String: NSImage] = [:]
