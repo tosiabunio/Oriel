@@ -1498,3 +1498,55 @@ the user asked to install, push and release once the tests passed.
   for `tosiabunio/Oriel` and `io.github.tosiabunio.oriel`, size, checksum, codesign,
   universal app and helper; it is the latest release. Reinstalled as fork build 64,
   "2026.10.18 (64)". The notes present phase 13; upstream base still 0.13.4b (`7fbc363`).
+
+## Visual refresh phase 14 on 2026-11-11: what stands apart
+
+The user asked for a review of the UI for visual improvements; a seventh survey
+(scratchpad `survey14.sh`: about fifty windows and dialogs, default font, dark,
+window server captures) found six spots, and the user asked to build them, install,
+push and release. Branch `modern-windows` (worktree `build/vw`): `d395516` (code),
+`f963ac6` (plan, README, screenshots).
+- Brief view: `updateBriefColumnWidth()` took the name with the most characters;
+  it now measures the 40 longest and uses the widest.
+- Settings: `SettingsPane.loadView` measures the widest label of all groups and
+  `grid(for:labelWidth:)` gives column 0 that width (not in a group of full-width
+  rows only: the Colors preview was clipped to it); groups use
+  `quaternarySystemFill`; `groupNote(_:)` is a note across its group.
+- Find Files: `tabs.tabViewType = .noTabsNoBorder` with `tabPicker` (an
+  `NSSegmentedControl` kept in step through `NSTabViewDelegate`; labels refreshed in
+  `updateAdvanced()`), so `click:Advanced` and window dumps still go through the
+  `NSTabView`; no results header; new windows 640 pt tall.
+- `ListBox.editor(_:size:)`: a filled rounded box for a text view in an alert (the
+  Ignore List, Download from URL, Multi-Rename's Edit Names).
+- Backgrounds: the tree's scroll view and `QuickViewPanel.draw` use
+  `Theme.panelBackground` (Quick Look itself is see-through around a picture);
+  `GridTableView.drawBackground` draws it with the panels' stripes; Markdown's dark
+  `--back` is `#1e1e1e`.
+- Synchronize: `SyncNameCell` (icon by extension, middle truncation: a wrapping cell
+  showed "Sources/" for `Sources/Settings.swift`), colors in `willDisplayCell`,
+  values unchanged (the `[row]` dumps read the data source); `SyncTableView.tile()`
+  calls `sizeToFit()` when the table is wider than its list (the inset style's
+  paddings pushed the last column past the edge).
+- Left for later (in the plan): Operations rows' status symbol, a Branch view chip,
+  free space inside an archive, a picture's size in the Lister, icons in the hotlist
+  and network browser, Split File's margins, About's empty space.
+- Validation: 403 of 403 regression checks, the five UX suites, 11 accessibility
+  checks, 13 core tests, 25 signed-update checks, localization. The middle
+  truncation went in after the regression run (drawing only, checked by capture).
+- CI: GitHub cancelled three of the nine push runs unstarted ("The job was not
+  acquired by Runner of type hosted … capacity constraints" for macOS arm64) and
+  mailed them as failures; `gh run view --json jobs` shows `cancelled` with no runner,
+  and the reason is in the job's annotations
+  (`gh api repos/tosiabunio/Oriel/check-runs/<job id>/annotations`). The workflows'
+  steps (`check.sh`; `accessibility.sh` + `loc.py`; `update-auth.sh`) were run
+  locally instead, and one accessibility run that got a runner had built the commit
+  with the runners' SDK.
+- Installed as fork build 65 and pushed (`main` = `local-build` = `f963ac6`, with
+  `modern-windows`), then `scripts/release.sh 2026.11.0` (the first November release;
+  release commit `1109fc5`, internal build 35):
+  https://github.com/tosiabunio/Oriel/releases/tag/v2026.11.0 has
+  `Oriel-2026.11.0.dmg` (8,997,500 bytes, SHA-256 `769d906f…75ee0369`), verified with
+  `build/vd/verify-driver <folder> 2026.11.0 Oriel tosiabunio/Oriel
+  io.github.tosiabunio.oriel`, size, checksum, codesign, universal app and helper; it
+  is the latest release. Reinstalled as fork build 66, "2026.11.0 (66)". Upstream base
+  still 0.13.4b (`7fbc363`).
