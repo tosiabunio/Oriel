@@ -19,8 +19,8 @@ nonisolated enum MarkdownPage {
         :root { color-scheme: light dark; --text: #1f2328; --muted: #59636e; --line: #d1d9e0; --soft: #f6f8fa;
                 --link: #0969da; --back: #ffffff; --code: rgba(129, 139, 152, 0.15); }
         @media (prefers-color-scheme: dark) {
-          :root { --text: #e6edf3; --muted: #9198a1; --line: #3d444d; --soft: #151b23; --link: #4493f8;
-                  --back: #0d1117; --code: rgba(101, 108, 118, 0.2); } }
+          :root { --text: #e6e6e6; --muted: #98989d; --line: #444444; --soft: #2a2a2a; --link: #4493f8;
+                  --back: #1e1e1e; --code: rgba(118, 118, 128, 0.24); } }
         body { margin: 0; background: var(--back); color: var(--text);
                font: 15px/1.6 -apple-system, "Helvetica Neue", sans-serif; }
         article { max-width: 880px; margin: 0 auto; padding: 24px 32px 48px; overflow-wrap: break-word; }

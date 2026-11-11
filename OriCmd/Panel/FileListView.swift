@@ -435,8 +435,11 @@ final class FileListView: NSView {
     /// Brief columns are as wide as the longest name (within limits).
     private func updateBriefColumnWidth() {
         guard viewMode == .brief else { return }
-        let longest = items.map(displayName).max { $0.count < $1.count } ?? ""
-        let width = (longest as NSString).size(withAttributes: [.font: Theme.panelFont]).width + 16 + Theme.rowIconSize + 4
+        // The widest name is among the longest ones: measuring every name of a large folder is slow.
+        let attributes: [NSAttributedString.Key: Any] = [.font: Theme.panelFont]
+        let longest = items.map(displayName).sorted { $0.count > $1.count }.prefix(40)
+        let widest = longest.map { ($0 as NSString).size(withAttributes: attributes).width }.max() ?? 0
+        let width = widest + 16 + Theme.rowIconSize + 4
         briefColumnWidth = min(max(width, 100), 360).rounded()
     }
 

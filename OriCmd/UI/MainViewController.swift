@@ -434,10 +434,7 @@ final class MainViewController: NSViewController {
         text.isAutomaticLinkDetectionEnabled = false
         text.isAutomaticQuoteSubstitutionEnabled = false
         text.identifier = NSUserInterfaceItemIdentifier("downloadURLs")
-        let scroll = NSScrollView(frame: text.frame)
-        scroll.documentView = text
-        scroll.hasVerticalScroller = true
-        scroll.borderType = .bezelBorder
+        let scroll = ListBox.editor(text, size: text.frame.size)
         let alert = NSAlert()
         alert.messageText = String(localized: "Download from URL")
         alert.informativeText = String(localized: "Addresses (http, https, ftp), one per line, into \(activePanel.directory.path):")
@@ -487,10 +484,7 @@ final class MainViewController: NSViewController {
         text.isAutomaticQuoteSubstitutionEnabled = false
         text.isAutomaticDashSubstitutionEnabled = false
         text.identifier = NSUserInterfaceItemIdentifier("ignoreList")
-        let scroll = NSScrollView(frame: text.frame)
-        scroll.documentView = text
-        scroll.hasVerticalScroller = true
-        scroll.borderType = .bezelBorder
+        let scroll = ListBox.editor(text, size: text.frame.size)
         let alert = NSAlert()
         alert.messageText = String(localized: "Ignore List")
         alert.informativeText = String(localized:

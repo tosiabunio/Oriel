@@ -88,6 +88,11 @@ class SettingsPane: NSViewController {
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 6
+        // One column of labels for the whole pane, so the controls of every group start
+        // on one line.
+        let labelWidth = groups.flatMap { group in
+            group.rows.enumerated().filter { !group.fullWidthRows.contains($0.offset) }.map { $0.element[0] }
+        }.compactMap { ($0 as? NSTextField)?.fittingSize.width }.max() ?? 0
         for group in groups where !group.rows.isEmpty {
             if let title = group.title {
                 let label = NSTextField(labelWithString: title)
@@ -97,7 +102,7 @@ class SettingsPane: NSViewController {
                     stack.setCustomSpacing(18, after: stack.arrangedSubviews[stack.arrangedSubviews.count - 2])
                 }
             }
-            let box = Self.groupBox(around: grid(for: group))
+            let box = Self.groupBox(around: grid(for: group, labelWidth: labelWidth))
             stack.addArrangedSubview(box)
             box.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
         }
@@ -156,9 +161,13 @@ class SettingsPane: NSViewController {
         }
     }
 
-    private func grid(for group: Group) -> NSGridView {
+    private func grid(for group: Group, labelWidth: CGFloat) -> NSGridView {
         let grid = NSGridView(views: group.rows)
         grid.column(at: 0).xPlacement = .trailing
+        // A group of full-width rows alone (the preview) has no label column to keep.
+        if group.fullWidthRows.count < group.rows.count {
+            grid.column(at: 0).width = labelWidth
+        }
         grid.rowAlignment = .firstBaseline
         grid.rowSpacing = 8
         grid.columnSpacing = 10
@@ -180,7 +189,7 @@ class SettingsPane: NSViewController {
         box.titlePosition = .noTitle
         box.borderWidth = 0
         box.cornerRadius = 10
-        box.fillColor = .quinarySystemFill
+        box.fillColor = .quaternarySystemFill
         box.contentViewMargins = .zero
         content.translatesAutoresizingMaskIntoConstraints = false
         box.contentView?.addSubview(content)
@@ -238,6 +247,16 @@ class SettingsPane: NSViewController {
         var group = current
         group.rows.append([NSGridCell.emptyContentView, label])
         current = group
+    }
+
+    /// A note about the whole group, from its leading edge, not under one control.
+    func groupNote(_ text: String) {
+        let label = NSTextField(wrappingLabelWithString: text)
+        label.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        label.textColor = .secondaryLabelColor
+        label.preferredMaxLayoutWidth = Self.noteWidth + 120
+        label.widthAnchor.constraint(lessThanOrEqualToConstant: Self.noteWidth + 120).isActive = true
+        fullWidth(label)
     }
 
     func fullWidth(_ view: NSView) {
@@ -382,7 +401,7 @@ private final class PanelsPane: SettingsPane {
         statusPopUp.target = self
         statusPopUp.action = #selector(statusLineChanged(_:))
         row(String(localized: "Status line:"), statusPopUp)
-        note(String(localized: "Optional columns (kind, created, dimensions, duration, tags) are chosen by right-clicking a panel's column headers."))
+        groupNote(String(localized: "Optional columns (kind, created, dimensions, duration, tags) are chosen by right-clicking a panel's column headers."))
 
         section(String(localized: "Mouse"))
         let rightButton = NSPopUpButton()

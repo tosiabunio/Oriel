@@ -88,6 +88,12 @@ final class DirectoryTreePanel: NSView {
         scrollView.documentView = outline
         scrollView.hasVerticalScroller = true
         scrollView.borderType = Settings.isModern ? .noBorder : .lineBorder
+        if Settings.isModern {
+            // An inset outline draws no background: the panels' own shows instead of the window's.
+            scrollView.drawsBackground = true
+            scrollView.backgroundColor = Theme.panelBackground
+            outline.backgroundColor = .clear
+        }
 
         for view in [titleBar, scrollView] {
             view.translatesAutoresizingMaskIntoConstraints = false

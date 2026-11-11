@@ -19,7 +19,6 @@ final class TableGridView: NSView, NSTableViewDataSource, NSTableViewDelegate {
         super.init(frame: .zero)
         grid.dataSource = self
         grid.delegate = self
-        grid.usesAlternatingRowBackgroundColors = true
         grid.gridStyleMask = [.solidVerticalGridLineMask]
         grid.allowsMultipleSelection = true
         grid.allowsColumnReordering = false
@@ -29,6 +28,7 @@ final class TableGridView: NSView, NSTableViewDataSource, NSTableViewDelegate {
         grid.columnAutoresizingStyle = .noColumnAutoresizing
         grid.copyRows = { [weak self] rows in self?.text(ofRows: rows) ?? "" }
         scrollView.documentView = grid
+        scrollView.backgroundColor = Theme.panelBackground
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = true
         scrollView.autohidesScrollers = true
@@ -165,6 +165,18 @@ final class TableGridView: NSView, NSTableViewDataSource, NSTableViewDelegate {
 /// Copies the selected rows (⌘C).
 private final class GridTableView: NSTableView {
     var copyRows: ((IndexSet) -> String)?
+
+    /// The Lister's text background with the panels' stripes, so a table stands on
+    /// what a text does.
+    override func drawBackground(inClipRect clipRect: NSRect) {
+        Theme.panelBackground.setFill()
+        clipRect.fill()
+        Theme.alternateRowBackground.setFill()
+        let rows = rows(in: clipRect)
+        for row in rows.location..<rows.location + rows.length where row % 2 == 1 {
+            rect(ofRow: row).intersection(clipRect).fill()
+        }
+    }
 
     @objc func copy(_ sender: Any?) {
         guard !selectedRowIndexes.isEmpty, let copyRows else {

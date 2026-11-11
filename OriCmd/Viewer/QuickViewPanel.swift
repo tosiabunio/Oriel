@@ -25,6 +25,13 @@ final class QuickViewPanel: NSView {
         preview?.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
     }
 
+    /// The panels' background behind what Quick Look leaves uncovered.
+    override func draw(_ dirtyRect: NSRect) {
+        guard Settings.isModern else { return }
+        Theme.panelBackground.setFill()
+        bounds.intersection(dirtyRect).fill()
+    }
+
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) is not supported")

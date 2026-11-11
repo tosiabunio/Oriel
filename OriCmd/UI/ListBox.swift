@@ -129,6 +129,32 @@ final class ListBox: NSView {
         fatalError("init(coder:) is not supported")
     }
 
+    /// A box of `size` for text typed in a dialog: the text view fills it, wraps at its
+    /// width and stands on the color of a text field.
+    static func editor(_ text: NSTextView, size: NSSize) -> ListBox {
+        text.minSize = NSSize(width: 0, height: size.height)
+        text.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: .greatestFiniteMagnitude)
+        text.isVerticallyResizable = true
+        text.isHorizontallyResizable = false
+        text.autoresizingMask = .width
+        text.textContainer?.widthTracksTextView = true
+        text.textContainerInset = NSSize(width: 4, height: 6)
+        text.drawsBackground = false
+        let box = ListBox(text)
+        box.isFilled = true
+        box.frame = NSRect(origin: .zero, size: size)
+        return box
+    }
+
+    /// Whether the box stands on a text field's color instead of its window's.
+    private var isFilled = false
+
+    override func draw(_ dirtyRect: NSRect) {
+        guard isFilled else { return }
+        NSColor.textBackgroundColor.setFill()
+        bounds.fill()
+    }
+
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
         updateBorder()

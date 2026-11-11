@@ -20,6 +20,8 @@ final class FindFilesWindowController: NSWindowController {
     /// How deep into subfolders: all, none, 1…9 levels.
     private let depthPopup = NSPopUpButton()
     private let tabs = NSTabView()
+    /// Chooses the tab: the tab view itself shows neither its tabs nor a frame.
+    private let tabPicker = NSSegmentedControl()
     private let advancedTab = NSTabViewItem(identifier: "advanced")
 
     // The Advanced tab: the date, the size, attributes.
@@ -107,7 +109,7 @@ final class FindFilesWindowController: NSWindowController {
 
     private init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 640, height: 540),
+            contentRect: NSRect(x: 0, y: 0, width: 640, height: 640),
             styleMask: [.titled, .closable, .resizable, .miniaturizable],
             backing: .buffered, defer: false
         )
@@ -138,6 +140,8 @@ final class FindFilesWindowController: NSWindowController {
         column.resizingMask = .autoresizingMask
         column.dataCell = FoundFileCell(textCell: "")
         resultsTable.addTableColumn(column)
+        // One column needs no title.
+        resultsTable.headerView = nil
         resultsTable.columnAutoresizingStyle = .uniformColumnAutoresizingStyle
         resultsTable.dataSource = self
         resultsTable.delegate = self
@@ -178,6 +182,14 @@ final class FindFilesWindowController: NSWindowController {
         templatesTab.label = String(localized: "Templates")
         templatesTab.view = padded(templatesPane())
         tabs.addTabViewItem(templatesTab)
+        tabs.tabViewType = .noTabsNoBorder
+        tabs.delegate = self
+        tabPicker.segmentCount = tabs.numberOfTabViewItems
+        tabPicker.trackingMode = .selectOne
+        tabPicker.segmentDistribution = .fit
+        tabPicker.target = self
+        tabPicker.action = #selector(tabPicked(_:))
+        tabPicker.selectedSegment = 0
         updateAdvanced()
 
         // The status at the leading edge; the buttons at the trailing one, Start Search last.
@@ -189,14 +201,17 @@ final class FindFilesWindowController: NSWindowController {
         statusLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
         statusLabel.lineBreakMode = .byTruncatingTail
 
-        let stack = NSStackView(views: [tabs, list, buttons])
+        let stack = NSStackView(views: [tabPicker, tabs, list, buttons])
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 10
+        stack.setCustomSpacing(2, after: tabPicker)
         stack.edgeInsets = NSEdgeInsets(top: 12, left: 16, bottom: 16, right: 16)
         for view in [tabs, list, buttons] {
             view.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -32).isActive = true
         }
+        tabPicker.centerXAnchor.constraint(equalTo: stack.centerXAnchor).isActive = true
+        list.heightAnchor.constraint(greaterThanOrEqualToConstant: 120).isActive = true
         tabs.setContentHuggingPriority(.required, for: .vertical)
         list.setContentHuggingPriority(.defaultLow, for: .vertical)
         window?.contentView = stack
@@ -228,9 +243,9 @@ final class FindFilesWindowController: NSWindowController {
         container.addSubview(content)
         NSLayoutConstraint.activate([
             content.topAnchor.constraint(equalTo: container.topAnchor, constant: 12),
-            content.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 12),
-            content.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12),
-            content.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -12),
+            content.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            content.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            content.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -4),
         ])
         return container
     }
@@ -471,6 +486,13 @@ final class FindFilesWindowController: NSWindowController {
         let inUse = [betweenBox, olderBox, sizeBox, duplicatesBox].contains { $0.state == .on }
             || attributeBoxes.contains { $0.1.state != .mixed }
         advancedTab.label = inUse ? String(localized: "Advanced (in use)") : String(localized: "Advanced")
+        for (index, tab) in tabs.tabViewItems.enumerated() where index < tabPicker.segmentCount {
+            tabPicker.setLabel(tab.label, forSegment: index)
+        }
+    }
+
+    @objc private func tabPicked(_ sender: Any?) {
+        tabs.selectTabViewItem(at: tabPicker.selectedSegment)
     }
 
     /// The query from the dialog; nil (after a message) when a number is wrong.
@@ -748,5 +770,11 @@ extension FindFilesWindowController: NSWindowDelegate {
     /// Closing the window (Esc) stops the search.
     func windowWillClose(_ notification: Notification) {
         search?.cancel()
+    }
+}
+
+extension FindFilesWindowController: NSTabViewDelegate {
+    func tabView(_ tabView: NSTabView, didSelect tabViewItem: NSTabViewItem?) {
+        tabPicker.selectedSegment = tabViewItem.map(tabView.indexOfTabViewItem) ?? 0
     }
 }

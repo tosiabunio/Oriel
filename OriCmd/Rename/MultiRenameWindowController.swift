@@ -299,10 +299,7 @@ final class MultiRenameWindowController: NSWindowController {
         text.isAutomaticDashSubstitutionEnabled = false
         text.isAutomaticTextReplacementEnabled = false
         text.identifier = NSUserInterfaceItemIdentifier("renameNames")
-        let scroll = NSScrollView(frame: text.frame)
-        scroll.documentView = text
-        scroll.hasVerticalScroller = true
-        scroll.borderType = .bezelBorder
+        let scroll = ListBox.editor(text, size: text.frame.size)
         let alert = NSAlert()
         alert.messageText = String(localized: "Edit Names")
         alert.informativeText = String(localized: "A new name per line, in the order of the files.")
