@@ -586,6 +586,42 @@ list font or a narrower panel:
 Left open: the scroll bar track where the system always shows scroll bars (see
 phase 12).
 
+### Phase 14: what stands apart
+
+A seventh survey (2026-11-11) captured about fifty windows and dialogs in the default
+dark setup and looked for what no longer matched the rest. The panels, the Lister's
+toolbar, the copy dialog and the palette need nothing. It built six things:
+
+1. **Brief view's columns.** The column was as wide as the name with the most
+   letters, not the widest one, so in the system font names of the same length were
+   cut short beside empty space. The widest of the longest names is measured now.
+   Both looks. Effort XS.
+2. **Settings.** Every group of a pane had its own column of labels, so the controls
+   started at three places in Panels and the checkboxes at two in Operations. A pane
+   now has one label column for all its groups, the groups' fill is a shade stronger,
+   and the note on optional columns spans its group instead of sitting under Status
+   line. Effort S.
+3. **Find Files.** The framed tab box gave way to a segmented picker above a plain
+   form, the single column lost its "Found files" title and its stray separator, and
+   a new window is 100 pt taller, all of it for the results. Effort S.
+4. **Texts typed in dialogs** (the Ignore List, Download from URL, Multi-Rename's
+   Edit Names) sat in a square sunken box that ran past the dialog's margins; they
+   are in the rounded box of the lists, on a text field's color. Effort XS.
+5. **One background.** The tree and Quick View stood on the window's tinted color
+   beside lists on the panels' own; the Lister showed text on one color, a table on
+   another and Markdown on GitHub's blue-black. The tree, Quick View's surround, the
+   Lister's table (with the panels' stripes) and Markdown in dark mode now stand on
+   the panels' background. Effort S.
+6. **Synchronize.** Names have their kind's icon, the direction is green, blue or
+   orange, sizes and dates are grey with sizes right-aligned, and the columns fit
+   the list with the two names sharing the rest (the right name used to run past the
+   edge). Effort S.
+
+Left for later: a status symbol and time in the Operations rows, a Branch view chip in
+the header, the volume's free space shown inside an archive, a picture's size in the
+Lister's subtitle, icons in the hotlist and the network browser, Split File's margins
+and the space below About's credits.
+
 ## The Look setting
 
 The fork already has eight appearance switches: folder brackets, Mac-style tabs,
@@ -604,7 +640,8 @@ survey left; phase 7 what a third survey found in the dialogs; phase 8 what a fo
 found in the remaining tools; phase 9 the header's type, at the user's request;
 phase 10 the bottom bar's type and the modifier hints; phase 11 the rows' icons;
 phase 12 the terminal and folder errors a fifth survey found; phase 13 what a sixth
-found with a large font and in narrow panels.
+found with a large font and in narrow panels; phase 14 what a seventh found standing apart
+from the rest.
 
 ## Sources
 

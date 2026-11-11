@@ -93,7 +93,10 @@ final class SyncWindowController: NSWindowController {
             column.resizingMask = isName ? [.autoresizingMask, .userResizingMask] : .userResizingMask
             column.minWidth = isName ? 120 : 30
             if isName {
-                column.dataCell = SyncNameCell(textCell: "")
+                let cell = SyncNameCell(textCell: "")
+                // A long path keeps its file's name instead of breaking after a folder.
+                cell.lineBreakMode = .byTruncatingMiddle
+                column.dataCell = cell
             } else if let cell = column.dataCell as? NSTextFieldCell {
                 cell.alignment = identifier == "action" ? .center : identifier.hasSuffix("Size") ? .right : .left
                 column.headerCell.alignment = cell.alignment
