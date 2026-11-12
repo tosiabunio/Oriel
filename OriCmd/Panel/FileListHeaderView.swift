@@ -2,8 +2,8 @@ import AppKit
 
 /// Column titles above the file list. Clicking a title sorts by that column,
 /// clicking it again reverses the order; right click chooses optional columns.
-/// A divider dragged sizes the column after it, Name taking the rest (a double click
-/// gives the column its measured width again); the widths stay with the column set.
+/// Dragging the edge between two titles resizes a column, a double click on it
+/// gives the column its measured width again; the widths stay with the column set.
 final class FileListHeaderView: NSView {
     static let titles: [SortColumn: String] = [
         .name: String(localized: "Name"), .ext: String(localized: "Ext"), .size: String(localized: "Size"),
@@ -36,10 +36,12 @@ final class FileListHeaderView: NSView {
     /// Widths to keep for the set: a divider let go or double-clicked, or the menu's reset.
     var onSetColumnWidths: (([SortColumn: CGFloat]) -> Void)?
 
-    /// A divider being dragged: the column after it, where and how wide it started,
-    /// how wide it may become, the columns shown and the set's widths then.
+    /// An edge being dragged: the column it resizes and how its width changes as the
+    /// edge moves right, where and how wide it started, how wide it may become, the
+    /// columns shown and the set's widths then.
     private struct Resizing {
         let column: SortColumn
+        let sign: CGFloat
         let startX: CGFloat
         let startWidth: CGFloat
         let maximumWidth: CGFloat
@@ -47,16 +49,6 @@ final class FileListHeaderView: NSView {
         let widths: [SortColumn: CGFloat]
     }
     private var resizing: Resizing?
-
-    /// How far from a divider a press still takes it.
-    private static let dividerTolerance: CGFloat = 4
-
-    private static var resizeCursor: NSCursor {
-        if #available(macOS 15, *) {
-            return .columnResize
-        }
-        return .resizeLeftRight
-    }
 
     private func layoutDidChange() {
         needsDisplay = true
@@ -148,16 +140,10 @@ final class FileListHeaderView: NSView {
         }
     }
 
-    /// The column after the divider at `x`.
-    private func divider(at x: CGFloat, in layout: ColumnLayout) -> SortColumn? {
-        layout.column(leftEdgeNear: x, tolerance: Self.dividerTolerance)
-    }
-
-    /// The divider before `column` and the middle of a column's title, if shown (for
-    /// the tests).
-    func dividerX(before column: SortColumn) -> CGFloat? {
+    /// Where the edge right of a column is, and the middle of its title (for test runs).
+    func edgeX(of column: SortColumn) -> CGFloat? {
         let layout = layout
-        return layout.columns.dropFirst().contains(column) ? layout.rect(for: column, y: 0, height: 0).minX : nil
+        return layout.columns.dropLast().contains(column) ? layout.rect(for: column, y: 0, height: 0).maxX : nil
     }
 
     func titleX(of column: SortColumn) -> CGFloat? {
@@ -175,7 +161,7 @@ final class FileListHeaderView: NSView {
     override func mouseMoved(with event: NSEvent) {
         let x = convert(event.locationInWindow, from: nil).x
         let layout = layout
-        hovered = divider(at: x, in: layout) == nil ? layout.column(at: x) : nil
+        hovered = layout.resizableEdge(near: x) == nil ? layout.column(at: x) : nil
     }
 
     override func mouseExited(with event: NSEvent) {
@@ -184,10 +170,9 @@ final class FileListHeaderView: NSView {
 
     override func resetCursorRects() {
         let layout = layout
-        for column in layout.columns.dropFirst() {
-            addCursorRect(NSRect(x: layout.rect(for: column, y: 0, height: 0).minX - Self.dividerTolerance, y: 0,
-                                 width: Self.dividerTolerance * 2, height: bounds.height),
-                          cursor: Self.resizeCursor)
+        for column in layout.columns.dropLast() {
+            let cell = layout.rect(for: column, y: 0, height: bounds.height)
+            addCursorRect(NSRect(x: cell.maxX - 3, y: 0, width: 6, height: bounds.height), cursor: .resizeLeftRight)
         }
     }
 
@@ -247,11 +232,12 @@ final class FileListHeaderView: NSView {
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
         let layout = layout
-        guard let column = divider(at: point.x, in: layout) else {
+        guard let edge = layout.resizableEdge(near: point.x) else {
             pressed = layout.column(at: point.x)
             pressedColumn = pressed
             return
         }
+        let column = edge.column
         if event.clickCount == 2 {
             var measured = widths
             measured[column] = nil
@@ -262,7 +248,7 @@ final class FileListHeaderView: NSView {
         // is, when already narrower), so none is left out while dragging.
         let width = layout.width(of: column)
         let name = layout.width(of: .name)
-        resizing = Resizing(column: column, startX: point.x, startWidth: width,
+        resizing = Resizing(column: column, sign: edge.sign, startX: point.x, startWidth: width,
                             maximumWidth: width + name - min(ColumnLayout.preferredNameWidth, name),
                             shown: Array(layout.columns.dropFirst()), widths: widths)
     }
@@ -274,10 +260,10 @@ final class FileListHeaderView: NSView {
             if let pressedColumn { pressed = layout.column(at: x) == pressedColumn ? pressedColumn : nil }
             return
         }
-        // The divider follows the pointer: the column after it gives or takes the width.
-        let proposed = (resizing.startWidth - (x - resizing.startX)).rounded()
+        // The column grows or shrinks, Name takes or gives the difference.
+        let proposed = (resizing.startWidth + resizing.sign * (x - resizing.startX)).rounded()
         let width = min(max(proposed, min(ColumnLayout.minimumColumnWidth, resizing.startWidth)), resizing.maximumWidth)
-        Self.resizeCursor.set()
+        NSCursor.resizeLeftRight.set()
         var changed = resizing.widths
         // Back where it started: the width it had (a measured one stays measured).
         if width != resizing.startWidth { changed[resizing.column] = width }

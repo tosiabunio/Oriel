@@ -92,9 +92,16 @@ struct ColumnLayout {
         frames[column]?.width ?? 0
     }
 
-    /// The column whose left edge (the divider before it) is within `tolerance` of `x`;
-    /// Name has none.
-    func column(leftEdgeNear x: CGFloat, tolerance: CGFloat) -> SortColumn? {
-        columns.dropFirst().first { abs(frames[$0]!.x - x) <= tolerance }
+    /// The edge between two columns near `x` (within `slop`), named by the column it
+    /// resizes: the one left of it, or for Name's edge the one right of it (Name
+    /// takes what is left), and how its width changes as the edge moves right.
+    func resizableEdge(near x: CGFloat, slop: CGFloat = 3) -> (column: SortColumn, sign: CGFloat, x: CGFloat)? {
+        for (index, column) in columns.dropLast().enumerated() {
+            guard let frame = frames[column] else { continue }
+            let edge = frame.x + frame.width
+            guard abs(x - edge) <= slop else { continue }
+            return column == .name ? (columns[index + 1], -1, edge) : (column, 1, edge)
+        }
+        return nil
     }
 }
