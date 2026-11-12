@@ -229,8 +229,8 @@ scripts/test/regress.sh                   # main file operations, checked on dis
   the bottom bar, dialogs restyled here), keep the fork's behavior and port the
   upstream fix into it rather than dropping either; ask only when the two cannot
   both be kept.
-- Last upstream check: 2026-10-11. `origin/main` was `7fbc363` (0.13.4b,
-  2026-10-08), merged on 2026-10-11 (see "Upstream 0.13.4b integrated" below).
+- Last upstream check: 2026-11-12. `origin/main` was `89b9d33` (0.13.6b,
+  2026-11-12), merged the same day (see "Upstream 0.13.6b integrated" below).
 
 ## Work in progress
 
@@ -1550,3 +1550,44 @@ push and release. Branch `modern-windows` (worktree `build/vw`): `d395516` (code
   io.github.tosiabunio.oriel`, size, checksum, codesign, universal app and helper; it
   is the latest release. Reinstalled as fork build 66, "2026.11.0 (66)". Upstream base
   still 0.13.4b (`7fbc363`).
+
+## Upstream 0.13.6b integrated on 2026-11-12: release 2026.11.1
+
+Branch `upstream-0.13.6b` (worktree `build/u6`): merge `4d271ee`, then `80f87da`.
+Upstream 0.13.5b and 0.13.6b (`89b9d33`) had built their own versions of two things
+the fork already had (column widths by dragging, the Finder-like end of the context
+menu, their PR #3), so nine files conflicted.
+- Taken as is: Esc closes one-button messages again (`UI/EscapeKey.swift`: a child
+  window covering the whole window is a glass backdrop, not a list); no macOS window
+  tabs (`NSWindow.allowsAutomaticWindowTabbing = false`); `FileListView.draw` clips
+  the rect to the bounds (their issue #5), with the fork's own range guard kept;
+  `MetadataCache.forget(_:column:)`; the `drawrect:x,y,w,h` test action.
+- Column widths: the merge first took upstream's dividers (a divider sizes the column
+  after it). The user asked to keep the fork's dragging: the edge right of a title
+  resizes that column, Name's edge the column right of it, the last column has no
+  edge. Kept from upstream: widths per column set (`ColumnSet.widths`,
+  `ColumnSet.standardWidths` under `DefaultColumnWidths`, `setWidths(_:of:)`), Reset
+  Column Widths in the header menu, and Name not shrinking below
+  `preferredNameWidth` during a drag, so no column leaves meanwhile.
+  `ColumnLayout(width:columns:widths:inset:)`; `ColumnLayout.customWidths` and its
+  notification are gone. A set without widths of its own reads the old global
+  `ColumnWidths` (`decodeWidths`), so earlier dragged widths carry over.
+- `FileListHeaderView` now resizes and clicks through `mouseDown` / `mouseDragged` /
+  `mouseUp` (state in `Resizing`, `pressedColumn`), not a `nextEvent` loop, and the
+  test actions call those directly. `headerdrag:col:DX` still means the edge right
+  of `col`. Synthetic header drags no longer go through the event queue, so a real
+  pointer over the test window should not disturb them.
+- Tests: the context-menu tag checks use `menu` (the menu as made) instead of
+  `contextmenu` (opened for real), as upstream does. New checks: cwdrag, cwmin,
+  cwreset, cwset (a set without Attr: beside the sidebar Name has no 50 pt to give),
+  cwlegacy, drawoutside. `pwidth` reads the widths from `-panels.txt`; `width` still
+  reads `-columns.txt`.
+- Validation: 409 of 409 regression checks, the five UX suites, 11 accessibility
+  checks, 13 core tests, 25 signed-update checks, localization.
+- Installed as fork build 67 and pushed (`main` = `local-build` = `80f87da`, with
+  `upstream-0.13.6b`), then `scripts/release.sh 2026.11.1` (release commit `64bb52d`,
+  internal build 36): https://github.com/tosiabunio/Oriel/releases/tag/v2026.11.1 has
+  `Oriel-2026.11.1.dmg` (9,008,153 bytes, SHA-256 `4a5832ab…5f89b67a`), verified with
+  `build/vd/verify-driver`, size, checksum, codesign, universal app and helper; it is
+  the latest release. Reinstalled as fork build 68, "2026.11.1 (68)". Upstream base
+  0.13.6b (`89b9d33`).
