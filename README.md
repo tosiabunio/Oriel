@@ -218,7 +218,7 @@ and the dependencies. Commit revisions are not displayed.
 
 Imported upstream versions and commits are recorded separately in release notes.
 The latest imported upstream checkpoint is
-[OriCmd 0.13.4b, commit 7fbc363](https://github.com/mmag/OriCmd/commit/7fbc363).
+[OriCmd 0.13.6b, commit 89b9d33](https://github.com/mmag/OriCmd/commit/89b9d33).
 Upstream imports preserve this fork's release numbering.
 
 ## Keys
@@ -261,7 +261,7 @@ layout `Ctrl+D`, `Ctrl+B`, `Ctrl+U` etc. work just like with the English one.
 | `Ctrl+F1` / `Ctrl+F2` (`⌘1` / `⌘2`) | Brief / Full view |
 | `Ctrl+Shift+F1` (`⌘4`) | Thumbnails (Quick Look previews) |
 | Right-click on the column headers | The columns of the set shown: Ext, Size, Date, Attr and the optional ones — kind, date created, picture dimensions, duration, Finder tags, Finder comment (sortable like the others). Attr is shown by default in the Classic look only. A panel too narrow for them all leaves out Attr, the optional ones, Date and Size, in that order, so names stay readable |
-| Drag the edge between two column titles | Resizes a column (the edge after Name resizes the column right of it; Name takes the rest), for every panel; a double click on the edge gives the column its measured width again |
+| Dragging a divider in the column headers | The column after it gets narrower or wider, Name takes the rest; a double click on the divider gives the column its usual width back (all of them: Reset Column Widths in the headers' menu). Each column set keeps its own widths |
 | Show → Columns | Column sets: the Default columns or a set of your own for the panel; Column Sets… makes them, and a set can be used by itself in folders matching masks (`~/Pictures*;*/Photos`) |
 | Settings → Panels → File list | File extensions in Full view: in their own column, or after the name (the Ext title still sorts by extension; a long name is cut short before its extension) |
 | Settings → Panels → File list → Sizes | Short sizes as the Finder counts them (`1,3 MB`; the default) or every byte, as Total Commander shows them; in the panels, the status line, the free space and when synchronizing |

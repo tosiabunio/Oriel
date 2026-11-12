@@ -9,7 +9,7 @@ import WebKit
 /// - `ORICMD_LEFT`, `ORICMD_RIGHT`: initial panel directories.
 /// - `ORICMD_KEYS`: space separated keystrokes played after launch, e.g.
 ///   `down shift+down f7 text:New enter wait`, or commands like `cmd:cm_SyncDirs`,
-///   `menu` (writes the context menu to `<snapshot>-menu.txt`), `sizes` (the cursor row's Size, the status line and the free space, to `<snapshot>-sizes.txt`), `columns` (the active panel's Full view columns, to `<snapshot>-columns.txt`), `tabbar` (the active panel's tabs as drawn and the part of the bar they show in, to `<snapshot>-tabbar.txt`), `sidebar` (its rows, to `<snapshot>-sidebar.txt`), `toolbar` (its items, Operations with its badge, and the bottom bar's Operations, to `<snapshot>-toolbar.txt`), `sidebarpick:Title` (a place chosen), `headerdrag:column:DX` / `headerdoubleclick:column` / `headerclick:column` (the edge right of a column title, or the title), `drawbelow` (draws only a strip below the last row), `tagcolor` (the tag color read for the cursor's item, to `<snapshot>-tagcolor.txt`), `contextmenu` (the same, opened for real, with what AppKit adds), `menupick:Title|N` (item N of its submenu Title chosen), `servicedata` (what a service gets for the selected files, to `<snapshot>-services.txt`), `drop:/path`, `drive:/path` (a drive
+///   `menu` (writes the context menu to `<snapshot>-menu.txt`), `sizes` (the cursor row's Size, the status line and the free space, to `<snapshot>-sizes.txt`), `columns` (the active panel's Full view columns, to `<snapshot>-columns.txt`), `tabbar` (the active panel's tabs as drawn and the part of the bar they show in, to `<snapshot>-tabbar.txt`), `sidebar` (its rows, to `<snapshot>-sidebar.txt`), `toolbar` (its items, Operations with its badge, and the bottom bar's Operations, to `<snapshot>-toolbar.txt`), `sidebarpick:Title` (a place chosen), `headerdrag:column:DX` / `headerdoubleclick:column` / `headerclick:column` (the divider before a column dragged or double-clicked, or the title clicked), `drawbelow` (draws only a strip below the last row), `drawrect:x,y,w,h` (the active file list asked to draw that rect, even beyond its bounds), `tagcolor` (the tag color read for the cursor's item, to `<snapshot>-tagcolor.txt`), `contextmenu` (the same, opened for real, with what AppKit adds), `menupick:Title|N` (item N of its submenu Title chosen), `servicedata` (what a service gets for the selected files, to `<snapshot>-services.txt`), `drop:/path`, `drive:/path` (a drive
 ///   button), `drivemenu:/path` / `drivemenu:/path|Item_Title` (a drive button's context menu),
 ///   `droptab:left:1:right:0` (a tab dropped on a tab bar), `wheel:N` (a mouse wheel over a 3D model), `tabbardoubleclick` (the empty end of the tab bar), `tabmiddleclick:N` (the middle button on the active panel's tab N), `tabmenu:N|Item_Title` (a tab's context menu), `menuitem:Submenu>Item_Title` (a main menu item), `headermenu:Item_Title` (the column header's menu), `tree:/path` (a folder chosen in the separate tree), `file:/path` (the file the next save or open sheet chooses), `speed:5_MB/s` (the speed limit the next copy starts with), `keybindings` (the Keyboard Shortcuts window), `flippedoffmain` (the window's views asked off the main thread whether they are flipped, as a drag does), `pathclick` (the path bar), `colorpreset:N` (Settings → Colors), `rightmouse:click:N` / `hold:N` / `drag:N-M` / `ctrlclick:N` (the right button on rows), `textmenu` (the frontmost text's context menu), `promise:/path` (the file on the
 ///   `crumb:N` / `othercrumb:N` (a parent folder), `pathend` (right of the path), `crumbmenu` / `crumbmenu:N` (hidden parents).
@@ -128,10 +128,12 @@ enum DebugAutomation {
                 } else if token == "menu", let list = window.firstResponder as? FileListView,
                           let menu = list.delegate?.fileList(list, contextMenuFor: list.selectedEntries),
                           let snapshot = environment["ORICMD_SNAPSHOT"] {
-                    // Writes the context menu's titles next to the snapshot.
+                    // Writes the context menu's titles next to the snapshot (a submenu's items
+                    // checked with ✓, or – when it holds for some of the files).
                     let titles = menu.items.map { item in
                         item.isSeparatorItem ? "---" : item.title
-                            + (item.submenu.map { " ▸ " + $0.items.map(\.title).joined(separator: " | ") } ?? "")
+                            + (item.submenu.map { " ▸ " + $0.items.map { ($0.state == .on ? "✓" : $0.state == .mixed ? "–" : "") + $0.title }
+                                .joined(separator: " | ") } ?? "")
                     }
                     try? titles.joined(separator: "\n").write(toFile: snapshot.replacingOccurrences(of: ".png", with: "-menu.txt"),
                                                                 atomically: true, encoding: .utf8)
@@ -203,34 +205,30 @@ enum DebugAutomation {
                         .write(toFile: snapshot.replacingOccurrences(of: ".png", with: "-sizes.txt"), atomically: true, encoding: .utf8)
                 } else if ["headerdrag:", "headerdoubleclick:", "headerclick:"].contains(where: token.hasPrefix),
                           let main = window.mainViewController {
-                    // The active panel's column titles: `headerdrag:column:DX` drags the edge
-                    // right of a column, `headerdoubleclick:column` double-clicks it,
-                    // `headerclick:column` clicks the title.
+                    // `headerdrag:date:-40`: the divider before a column of the active panel's
+                    // header dragged by that many points; `headerdoubleclick:date`: double-clicked;
+                    // `headerclick:date`: a click in the middle of the column's title.
                     let parts = token.split(separator: ":").map(String.init)
                     let header = main.activePanel.panelView.headerView
-                    guard parts.count >= 2, let column = SortColumn(rawValue: parts[1]) else { continue }
-                    @MainActor func event(_ type: NSEvent.EventType, x: CGFloat, clicks: Int = 1) -> NSEvent? {
+                    guard parts.count >= 2, let column = SortColumn(rawValue: parts[1]),
+                          let x = parts[0] == "headerclick" ? header.titleX(of: column) : header.dividerX(before: column)
+                    else { continue }
+                    @MainActor func event(_ type: NSEvent.EventType, at x: CGFloat, clicks: Int) -> NSEvent? {
                         NSEvent.mouseEvent(with: type, location: header.convert(NSPoint(x: x, y: header.bounds.midY), to: nil),
                                            modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
                                            windowNumber: window.windowNumber, context: nil, eventNumber: harnessEventNumber,
                                            clickCount: clicks, pressure: type == .leftMouseUp ? 0 : 1)
                     }
-                    switch parts[0] {
-                    case "headerdrag":
-                        guard parts.count == 3, let dx = Double(parts[2]).map({ CGFloat($0) }),
-                              let edge = header.edgeX(of: column) else { continue }
-                        event(.leftMouseDragged, x: edge + dx).map { NSApp.postEvent($0, atStart: false) }
-                        event(.leftMouseUp, x: edge + dx).map { NSApp.postEvent($0, atStart: false) }
-                        event(.leftMouseDown, x: edge).map(header.mouseDown)
-                    case "headerdoubleclick":
-                        guard let edge = header.edgeX(of: column) else { continue }
-                        event(.leftMouseDown, x: edge, clicks: 2).map(header.mouseDown)
-                    case "headerclick":
-                        guard let x = header.titleX(of: column) else { continue }
-                        event(.leftMouseUp, x: x).map { NSApp.postEvent($0, atStart: false) }
-                        event(.leftMouseDown, x: x).map(header.mouseDown)
-                    default:
-                        continue
+                    let dx = parts.count == 3 ? Double(parts[2]) ?? 0 : 0
+                    for clicks in 1...(parts[0] == "headerdoubleclick" ? 2 : 1) {
+                        if let down = event(.leftMouseDown, at: x, clicks: clicks) { header.mouseDown(with: down) }
+                        // In steps, as a hand moves.
+                        for step in 1...4 where dx != 0 {
+                            if let drag = event(.leftMouseDragged, at: x + dx * Double(step) / 4, clicks: clicks) {
+                                header.mouseDragged(with: drag)
+                            }
+                        }
+                        if let up = event(.leftMouseUp, at: x + dx, clicks: clicks) { header.mouseUp(with: up) }
                     }
                 } else if token == "sidebar", let root = window.contentViewController as? RootSplitViewController, let snapshot {
                     // The sidebar's rows (sections in capitals, "> " before the highlighted
@@ -488,6 +486,13 @@ enum DebugAutomation {
                           let model = topmost(window).contentView as? ModelView {
                     // A mouse wheel turned over the Lister's 3D model (lines > 0: up).
                     model.zoom(lines: lines)
+                } else if token.hasPrefix("drawrect:"), let main = window.mainViewController {
+                    // The active file list asked to draw a rect, even one beyond its bounds, as
+                    // AppKit does while it scrolls a list concurrently (past the top of it).
+                    let numbers = token.dropFirst(9).split(separator: ",").compactMap { Double($0) }
+                    guard numbers.count == 4 else { continue }
+                    drawOffscreen(main.activePanel.panelView.listView,
+                                  rect: NSRect(x: numbers[0], y: numbers[1], width: numbers[2], height: numbers[3]))
                 } else if token.hasPrefix("colorpreset:"), let index = Int(token.dropFirst(12)),
                           ColorSettings.Preset.allCases.indices.contains(index) {
                     ColorSettings.Preset.allCases[index].apply()
@@ -765,6 +770,12 @@ enum DebugAutomation {
                     ] + zip(["left", "right"], main.panels).map { side, panel in
                         "\(side) columns: " + panel.listView.columns.map(\.rawValue).joined(separator: ", ")
                     } + zip(["left", "right"], main.panels).map { side, panel in
+                        // The Full view columns as drawn, with their widths.
+                        let list = panel.listView
+                        let layout = list.columnLayout
+                        return "\(side) widths: " + layout.columns.map { "\($0.rawValue) \(Int(layout.rect(for: $0, y: 0, height: 0).width))" }
+                            .joined(separator: ", ")
+                    } + zip(["left", "right"], main.panels).map { side, panel in
                         // The entries listed (the first 30), the marked ones with *.
                         "\(side) items: " + panel.listView.items.filter { !$0.isParent }.prefix(30).map { item in
                             (panel.listView.marked.contains(item.name) ? "*" : "") + item.name
@@ -842,6 +853,22 @@ enum DebugAutomation {
                 exit(0)
             }
         }
+    }
+
+    /// Calls the view's draw(_:) with the rect as is (AppKit's own display paths would clip it
+    /// to the bounds), into a bitmap of the view's size that is thrown away.
+    private static func drawOffscreen(_ view: NSView, rect: NSRect) {
+        guard let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds),
+              let context = NSGraphicsContext(bitmapImageRep: bitmap) else { return }
+        NSGraphicsContext.saveGraphicsState()
+        defer { NSGraphicsContext.restoreGraphicsState() }
+        NSGraphicsContext.current = context
+        if view.isFlipped {
+            context.cgContext.translateBy(x: 0, y: view.bounds.height)
+            context.cgContext.scaleBy(x: 1, y: -1)
+        }
+        view.draw(rect)
+        NSLog("drawrect: drew %@ of a %@ list", NSStringFromRect(rect), NSStringFromRect(view.bounds))
     }
 
     private static func textView(in view: NSView?) -> NSTextView? {

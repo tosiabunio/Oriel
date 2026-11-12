@@ -207,20 +207,21 @@ check "the context menu has Get Info (the Finder's window; not opened here)" "gr
 
 # As in the Finder, the context menu ends with Share and the files' tags (the color tags
 # under the Finder's own names, which differ by language: written so, they keep their
-# color); AppKit adds Services below for a person (not in test runs, which stay behind).
+# color); AppKit adds Services below for a person (not in test runs, which stay behind,
+# so the menu is written as made, never opened over the user's work).
 usertags() { xattr -px com.apple.metadata:_kMDItemUserTags $1 2>/dev/null | xxd -r -p | plutil -convert json -o - - 2>/dev/null; }
 scripts/test/mkdata.sh
-run finderitems "alt+n wait text:otes escape contextmenu wait"
+run finderitems "alt+n wait text:otes escape menu"
 check "the context menu ends with Share and Tags" "tail -2 build/shots/reg-finderitems-menu.txt | cut -d' ' -f1 | tr '\\n' ' ' | grep -q '^Share… Tags '"
 run servicedata "alt+n wait text:otes escape servicedata"
 check "a service gets the files as URLs, as paths and as text" "grep -q '^public.file-url: file://.*/notes.md' build/shots/reg-servicedata-services.txt && grep -q '^NSFilenamesPboardType: .*/notes.md' build/shots/reg-servicedata-services.txt && grep -q '^public.utf8-plain-text: /.*/notes.md' build/shots/reg-servicedata-services.txt"
 run tagred "alt+n wait text:otes escape menupick:Tags|0 wait"
 check "the first color in Tags gives the file the Finder's red tag" "usertags $L/notes.md | grep -q '\\\\n6\"'"
-run tagmixed "alt+n wait text:otes escape insert alt+r wait text:eadme escape insert contextmenu wait"
+run tagmixed "alt+n wait text:otes escape insert alt+r wait text:eadme escape insert menu"
 check "a tag only some of the files have is shown with a dash" "grep -q '^Tags ▸ –' build/shots/reg-tagmixed-menu.txt"
 run taguntag "alt+n wait text:otes escape menupick:Tags|0 wait"
 check "the color in Tags again takes the tag away" "[ -z \"\$(usertags $L/notes.md | tr -d '[]')\" ]"
-run tagarchive "alt+a wait text:rchive-test escape enter wait wait down contextmenu wait"
+run tagarchive "alt+a wait text:rchive-test escape enter wait wait down menu"
 check "no Share or Tags inside an archive" "! grep -q '^Share\\|^Tags' build/shots/reg-tagarchive-menu.txt"
 
 scripts/test/mkdata.sh
@@ -916,14 +917,6 @@ run hotlistempty "cmd:configureHotlist wait"
 check "an empty hotlist says so" "grep -qx 'No folders in the hotlist' build/shots/reg-hotlistempty-win1.txt"
 run startadd "cmd:showStartMenuEditor wait click:Add wait"
 check "the Start menu's + adds a command, and the list no longer says it is empty" "grep -q '^\\[row\\] New Command' build/shots/reg-startadd-win1.txt && ! grep -qx 'No commands in the Start menu' build/shots/reg-startadd-win1.txt"
-# Column widths: dragging the edge right of a title resizes that column (Name's edge
-# the next one), Name taking the difference; a double click on the edge measures again.
-run colwide "headerdrag:size:30 columns"
-check "dragging the edge of Size widens it, Name gives the room" "[ \"\$(width colwide size)\" = \$((\$(width lookmodern size) + 30)) ] && [ \"\$(width colwide name)\" = \$((\$(width lookmodern name) - 30)) ]"
-run colname "headerdrag:name:-40 columns"
-check "dragging the edge of Name widens the next column" "[ \"\$(width colname ext)\" = \$((\$(width lookmodern ext) + 40)) ]"
-run colreset "headerdrag:size:30 headerdoubleclick:size columns"
-check "a double click on the edge gives the column its width again" "[ \"\$(width colreset size)\" = \"\$(width lookmodern size)\" ]"
 run colsort "headerclick:name home down"
 check "a click on the Name title reverses the order" "panels colsort | grep -q '^left\\*: .* | cursor: many |'"
 # A narrow panel (the separate tree beside it) leaves Name its room, Date giving way;
@@ -1320,6 +1313,28 @@ run cheader "headermenu:Kind wait"
 check "A column turned on in the header menu" "[ \"\$(columns cheader left)\" = 'ext, size, date, kind' ] && [ \"\$(columns cheader right)\" = 'ext, size, date, kind' ]"
 run cwindow "menuitem:Column_Sets… wait click:+ wait set:columnSetName=Wide set:columnSet-kind=on set:columnSet-attr=off wait escape wait menuitem:Columns>Wide wait"
 check "A column set made in the Column Sets window" "[ \"\$(columns cwindow left)\" = 'ext, size, date, kind' ]"
+
+# Column widths: a divider of the header dragged sizes the column after it, Name taking the
+# rest (never below a column's 24 points); a double click on it, or Reset Column Widths in
+# the header menu, gives back the measured widths; each set keeps its own.
+pwidth() { sed -n "s/^${3:-left} widths: .*$2 \([0-9]*\).*/\1/p" build/shots/reg-$1-panels.txt; }
+run cwbase "wait"
+run cwdrag "headerdrag:date:-40"
+check "A header divider dragged left widens the column after it, Name gives the width" "[ \$(pwidth cwdrag date) -eq \$(( \$(pwidth cwbase date) + 40 )) ] && [ \$(pwidth cwdrag name) -eq \$(( \$(pwidth cwbase name) - 40 )) ] && [ \$(pwidth cwdrag date right) -eq \$(pwidth cwdrag date) ]"
+run cwmin "headerdrag:ext:500"
+check "...and not narrower than 24 points" "[ \$(pwidth cwmin ext) -eq 24 ]"
+run cwdouble "headerdrag:date:-40 headerdoubleclick:date"
+check "A double click on the divider gives the column its width back" "[ \$(pwidth cwdouble date) -eq \$(pwidth cwbase date) ]"
+run cwreset "headerdrag:date:-40 headerdrag:size:-20 headermenu:Reset_Column_Widths"
+check "Reset Column Widths gives all the columns their widths back" "[ \$(pwidth cwreset date) -eq \$(pwidth cwbase date) ] && [ \$(pwidth cwreset size) -eq \$(pwidth cwbase size) ]"
+# Without Attr: beside the sidebar Name has no 50 points to give with it.
+defaults write ru.themmag.OriCmd.tests ColumnSets -array '{name=Photos;columns=(ext,size,date);folders="";}'
+run cwset "headermenu:Photos headerdrag:date:-50 headermenu:Default_Columns wait headermenu:Photos"
+check "A column set keeps its own widths" "[ \$(pwidth cwset date) -eq \$(( \$(pwidth cwbase date) + 50 )) ] && [ \$(pwidth cwset date right) -eq \$(pwidth cwbase date) ]"
+# AppKit may ask a list to draw a rect beyond it, even one wholly above it (a list scrolled
+# concurrently past its top, issue #5): nothing is drawn there, and the app goes on.
+run drawoutside "drawrect:0,-60,400,20 drawrect:0,5000,400,40 cmd:cm_SrcShort drawrect:5000,0,100,100 cmd:cm_SrcThumbs drawrect:0,-500,400,100 cmd:cm_SrcLong"
+check "A rect beyond the file list drawn: the app goes on" "[ -f build/shots/reg-drawoutside.png ]"
 
 # The separate tree: a folder chosen in it is shown in the active panel (the other
 # one too after Tab), and it follows the active panel.

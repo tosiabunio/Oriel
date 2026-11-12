@@ -65,6 +65,10 @@ final class FileListView: NSView {
     var columns = ColumnSet.standard {
         didSet { if columns != oldValue { needsDisplay = true } }
     }
+    /// The set's own column widths (the others are measured).
+    var columnWidths: [SortColumn: CGFloat] = [:] {
+        didSet { if columnWidths != oldValue { needsDisplay = true } }
+    }
 
     /// Calculated folder sizes by name, shown instead of <DIR>.
     var folderSizes: [String: Int64] = [:] {
@@ -95,12 +99,6 @@ final class FileListView: NSView {
         super.init(frame: frameRect)
         let promiseTypes = NSFilePromiseReceiver.readableDraggedTypes.map { NSPasteboard.PasteboardType($0) }
         registerForDraggedTypes([NSPasteboard.PasteboardType.fileURL] + promiseTypes)
-        NotificationCenter.default.addObserver(self, selector: #selector(columnWidthsDidChange(_:)),
-                                               name: ColumnLayout.widthsDidChange, object: nil)
-    }
-
-    @objc private func columnWidthsDidChange(_ notification: Notification) {
-        if viewMode == .full { needsDisplay = true }
     }
 
     /// The modern cursor turns grey while the window is not the key one.
@@ -132,7 +130,7 @@ final class FileListView: NSView {
 
     /// The Full view columns, inset from the list's edges in the modern look.
     var columnLayout: ColumnLayout {
-        ColumnLayout(width: bounds.width, columns: columns, inset: Theme.contentInset)
+        ColumnLayout(width: bounds.width, columns: columns, widths: columnWidths, inset: Theme.contentInset)
     }
 
     @available(*, unavailable)
@@ -496,20 +494,24 @@ final class FileListView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         Theme.panelBackground.setFill()
         dirtyRect.fill()
-        guard !items.isEmpty else { return }
+        // AppKit may ask for a rect beyond the bounds, even one wholly above them (a list
+        // scrolled concurrently past its top, issue #5): only the entries within the bounds
+        // are drawn, and none when the rect holds no entry.
+        let rect = dirtyRect.intersection(bounds)
+        guard !items.isEmpty, !rect.isEmpty else { return }
 
         let first: Int
         let last: Int
         switch viewMode {
         case .full:
-            first = Int(dirtyRect.minY / rowHeight)
-            last = Int(dirtyRect.maxY / rowHeight)
+            first = Int(rect.minY / rowHeight)
+            last = Int(rect.maxY / rowHeight)
         case .brief:
-            first = Int(dirtyRect.minX / briefColumnWidth) * briefRowsPerColumn
-            last = (Int(dirtyRect.maxX / briefColumnWidth) + 1) * briefRowsPerColumn - 1
+            first = Int(rect.minX / briefColumnWidth) * briefRowsPerColumn
+            last = (Int(rect.maxX / briefColumnWidth) + 1) * briefRowsPerColumn - 1
         case .thumbnails:
-            first = Int(dirtyRect.minY / thumbnailCell.height) * thumbnailColumns
-            last = (Int(dirtyRect.maxY / thumbnailCell.height) + 1) * thumbnailColumns - 1
+            first = Int(rect.minY / thumbnailCell.height) * thumbnailColumns
+            last = (Int(rect.maxY / thumbnailCell.height) + 1) * thumbnailColumns - 1
         }
         // Only the area below the last row may need drawing (a menu closed over it): then
         // there is no row to draw, and a range from the first to the last would trap.

@@ -6821,6 +6821,16 @@
         }
       }
     },
+    "Reset Column Widths": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сбросить ширину колонок"
+          }
+        }
+      }
+    },
     "Restart Now": {
       "localizations": {
         "ru": {
