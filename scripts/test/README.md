@@ -18,7 +18,14 @@ real keyboard and mouse, so working elsewhere meanwhile changes nothing.
   both), `*.oricmdfiles` / `*.oricmdlookup` / `*.oricmdprefs` ask it to read the
   file / reach the service / write the preferences domain named inside (it must be
   refused); `<name>-highlighter.txt` counts the services killed and the texts sent. `rightmouse:click:N`, `hold:N`, `drag:N-M` and `ctrlclick:N`
-  play the right button on panel rows. `crumb:N` / `othercrumb:N` click part N of the active / other
+  play the right button on panel rows; `rowclick:NAME` / `rowdoubleclick:NAME` play the left
+  button on a row's name (with `:shift`, `:cmd`, `:alt` or `:ctrl`), and `rowpress:NAME`,
+  `rowrelease:NAME`, `rowdrag:NAME`, `rowclickempty:NAME` and `renamestate:NAME` cover the
+  click-to-rename checks (a held button, a drag, a click beside the text, the editor's state);
+  `renamewait` waits past the user's double-click interval, and `flagschanged:shift` presses
+  a modifier alone. The row tokens write `<name>-actions.txt`, and a token that could not be
+  played writes `<name>-error.txt` and logs, so a negative check cannot pass by doing nothing.
+  `crumb:N` / `othercrumb:N` click part N of the active / other
   panel's path (`/` is 0), `pathend` clicks right of it, and `crumbmenu` writes the
   parents a long path puts away into `…` to `<name>-menu.txt` (`crumbmenu:N` chooses one). `volumemenu` writes
   the volume menu of the compact path bar there (`✓ ` before the current volume).

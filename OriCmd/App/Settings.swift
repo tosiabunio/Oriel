@@ -35,6 +35,7 @@ enum Settings {
         static let copyOverwriteLocked = "CopyOverwriteLocked"
         static let copySkipDSStore = "CopySkipDSStore"
         static let rightButton = "RightMouseButton"
+        static let clickToRename = "ClickToRename"
         static let extensionDisplay = "ExtensionDisplay"
         static let sizeDisplay = "SizeDisplay"
         static let plainStatus = "PlainStatusLine"
@@ -136,6 +137,13 @@ enum Settings {
     static var rightButton: RightButton {
         get { AppDefaults.store.string(forKey: Key.rightButton).flatMap(RightButton.init) ?? .menu }
         set { set(newValue.rawValue, Key.rightButton) }
+    }
+
+    /// A click on the name of the entry already under the cursor renames it in place,
+    /// as in the Finder. Off by default: Total Commander does not.
+    static var clickToRename: Bool {
+        get { bool(Key.clickToRename, default: false) }
+        set { set(newValue, Key.clickToRename) }
     }
 
     /// Where Full view shows file extensions.

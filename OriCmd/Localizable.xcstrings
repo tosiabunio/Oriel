@@ -1101,6 +1101,16 @@
         }
       }
     },
+    "As in the Finder: a click on the name of the file under the cursor starts renaming it after a moment; a double click still opens it.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Как в Finder: щелчок по имени файла под курсором через мгновение начинает его переименование; двойной щелчок по-прежнему открывает."
+          }
+        }
+      }
+    },
     "As in the system": {
       "localizations": {
         "ru": {
@@ -1897,6 +1907,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сбросить фильтры"
+          }
+        }
+      }
+    },
+    "Click the selected name to rename it": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Щелчок по имени под курсором — переименование"
           }
         }
       }

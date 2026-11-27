@@ -2416,6 +2416,10 @@ extension FilePanelController: FileListViewDelegate {
         delegate?.filePanelSwitchPanel(self)
     }
 
+    func fileListCanRename(_ list: FileListView) -> Bool {
+        archive?.isWritable ?? true
+    }
+
     func fileList(_ list: FileListView, rename item: FileItem, to newName: String) {
         guard newName != item.name else { return }
         if let remote {

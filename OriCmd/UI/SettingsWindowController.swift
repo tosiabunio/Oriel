@@ -414,6 +414,9 @@ private final class PanelsPane: SettingsPane {
         rightButton.action = #selector(rightButtonChanged(_:))
         row(String(localized: "Right button:"), rightButton)
         note(String(localized: "Marking: a click marks or unmarks a file, a drag over files makes them all as the first one became; hold the button still for the context menu. On [..] and with Control-click the menu opens at once."))
+        row(nil, checkbox(String(localized: "Click the selected name to rename it"), Settings.clickToRename,
+                          #selector(clickToRenameChanged(_:))))
+        note(String(localized: "As in the Finder: a click on the name of the file under the cursor starts renaming it after a moment; a double click still opens it."))
         refresh()
     }
 
@@ -451,6 +454,8 @@ private final class PanelsPane: SettingsPane {
     @objc private func rightButtonChanged(_ sender: NSPopUpButton) {
         Settings.rightButton = sender.indexOfSelectedItem == 0 ? .menu : .marks
     }
+
+    @objc private func clickToRenameChanged(_ sender: NSButton) { Settings.clickToRename = sender.state == .on }
 
     private func updateFontLabel() {
         let font = Settings.panelFont

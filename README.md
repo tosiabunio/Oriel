@@ -218,7 +218,7 @@ and the dependencies. Commit revisions are not displayed.
 
 Imported upstream versions and commits are recorded separately in release notes.
 The latest imported upstream checkpoint is
-[OriCmd 0.13.6b, commit 89b9d33](https://github.com/mmag/OriCmd/commit/89b9d33).
+[OriCmd 0.13.8b, commit 6550a43](https://github.com/mmag/OriCmd/commit/6550a43).
 Upstream imports preserve this fork's release numbering.
 
 ## Keys
@@ -315,7 +315,7 @@ shortcuts in parentheses.
 | `F5` | Copy (to the other panel by default) |
 | `Shift+F5` | Copy within the same folder under another name |
 | `F6` | Move / rename |
-| `Shift+F6`, `F2` | Rename in place (the name is selected; `F2` again selects the extension, then the whole name) |
+| `Shift+F6`, `F2` | Rename in place (the name is selected; `F2` again selects the extension, then the whole name); a click on the name of the already selected entry, as in the Finder, starts it too when Settings → Panels → Mouse → "Click the selected name to rename it" is on (off by default) |
 | `Ctrl+M` | Multi-Rename Tool: masks `[N]`, `[N2-5]`, `[E]`, `[C]`, `[P]`, `[YMD]`, `[hms]`, search and replace (including regular expressions), case, preview and undo; rules saved under a name; the new names given one by one — edited as a list (Edit Names…) or read from a text file, a line per file |
 | `F7` (`⇧⌘N`) | New folder (`a/b/c` creates nested ones) |
 | `F8`, `Del` (`⌘⌫`) | Move to the Trash |
