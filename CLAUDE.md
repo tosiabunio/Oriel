@@ -229,8 +229,8 @@ scripts/test/regress.sh                   # main file operations, checked on dis
   the bottom bar, dialogs restyled here), keep the fork's behavior and port the
   upstream fix into it rather than dropping either; ask only when the two cannot
   both be kept.
-- Last upstream check: 2026-11-12. `origin/main` was `89b9d33` (0.13.6b,
-  2026-11-12), merged the same day (see "Upstream 0.13.6b integrated" below).
+- Last upstream check: 2026-11-27. `origin/main` was `6550a43` (0.13.8b,
+  2026-11-27), merged the same day (see "Upstream 0.13.8b integrated" below).
 
 ## Work in progress
 
@@ -1591,3 +1591,41 @@ menu, their PR #3), so nine files conflicted.
   `build/vd/verify-driver`, size, checksum, codesign, universal app and helper; it is
   the latest release. Reinstalled as fork build 68, "2026.11.1 (68)". Upstream base
   0.13.6b (`89b9d33`).
+
+## Upstream 0.13.8b integrated on 2026-11-27: release 2026.11.2
+
+Branch `upstream-0.13.8b` (worktree `build/u8`), merge `cfcf147`: upstream 0.13.7b
+and 0.13.8b through `6550a43`. The project file kept the fork's (upstream only bumped
+to 0.13.8b/22); `README.ru.md` stays deleted; `scripts/test/run.sh` kept the fork's
+(its `rm` already removes `<name>-*`).
+- SFTP (0.13.8b): `SFTPFileSystem.controlDirectory()` and `Askpass.path()` recreate
+  the control socket folder and the SSH_ASKPASS script when macOS cleans `$TMPDIR`
+  after days of uptime. Taken as is, with the script's dialog titles still
+  `Bundle.main.appName`; the fork's `ls -lan "<folder>"` listing is untouched.
+- Click to rename (0.13.7b): a click on the name of the entry already under the
+  cursor renames it in place after `NSEvent.doubleClickInterval`
+  (`clickRenameCandidate`, `scheduleRenameAfterClick`, `cancelPendingRename()` on keys,
+  modifiers, drags, menus, other entries, panel or folder changes;
+  `fileListCanRename` refuses read-only archives). The user asked for it behind a
+  setting, off by default: `Settings.clickToRename` (`ClickToRename`), Settings →
+  Panels → Mouse → "Click the selected name to rename it" with a note.
+  `renameHitRects` was ported to the fork's drawing: Full view uses `columnLayout`
+  and `nameAndExtension` (inset, `Theme.rowIconSize`, optional brackets, extensions
+  after names), Brief the modern 3 pt inset and `rowIconSize + 4`.
+- Test harness: upstream's `rowclick:` / `rowdoubleclick:` / `rowpress:` /
+  `rowrelease:` / `rowdrag:` / `rowclickempty:` / `renamestate:` / `renamewait` /
+  `flagschanged:` tokens and `<name>-actions.txt` / `<name>-error.txt`
+  (`testAction`, `testFailure`); `renamestate` uses `window.mainViewController`.
+  Upstream's 18 click checks run through `crun` (writes `ClickToRename true` before
+  `run`); new checks clickoff (the default does not rename), clickwithext,
+  clicklarge (Monaco 18).
+- Validation: 430 of 430 regression checks, the five UX suites, 11 accessibility
+  checks, 13 core tests, 25 signed-update checks, localization (Russian for the new
+  setting and note), a Settings → Panels snapshot.
+- Installed as fork build 69 and pushed (`main` = `local-build` = `cfcf147`, with
+  `upstream-0.13.8b`), then `scripts/release.sh 2026.11.2` (release commit `ac242d5`,
+  internal build 37): https://github.com/tosiabunio/Oriel/releases/tag/v2026.11.2 has
+  `Oriel-2026.11.2.dmg` (9,021,587 bytes, SHA-256 `f093689d…caee2f2de0`), verified
+  with `build/vd/verify-driver`, size, checksum, codesign, universal app and helper;
+  it is the latest release. Reinstalled as fork build 70, "2026.11.2 (70)". Upstream
+  base 0.13.8b (`6550a43`).
